@@ -17,7 +17,9 @@ const char *keys = { "{help h usage ? |         | print this message}"
 
 
 
+static const char * windowName = "Hough Circle Detection Demo";
 
+static const char * hcoName = "final CircleDetector";
 
 
 int color_pick(Mat &src, int x, int y)
@@ -63,9 +65,9 @@ int color_pick_left(Mat &src, int x, int y)
 
     sprintf(mg,"[%f]",hsv.hsv.hue);
 
-    //putText(src, mg, cvPoint(x + 12,y + 12), FONT_HERSHEY_PLAIN, 1.0,Scalar(255, 255, 255, 0), 2);
+    putText(src, mg, cvPoint(x + 12,y + 12), FONT_HERSHEY_PLAIN, 1.0,Scalar(255, 255, 255, 0), 2);
 
-    //imshow("after color balance", src);
+    imshow(hcoName, src);
     return 0;
 }
 
@@ -222,7 +224,7 @@ private:
     std::vector<Vec3f> circles;
 };
  
-static const char * windowName = "Hough Circle Detection Demo";
+
  
 class EggsDetectorBind
 {
@@ -321,11 +323,6 @@ private:
 #endif
 
 
-
-
-
-
-
 int main(int argc, const char **argv)
 {
     CommandLineParser parser(argc, argv, keys);
@@ -350,13 +347,6 @@ int main(int argc, const char **argv)
         return -1;
     }
 
-    while (src.cols > 1000) {
-        Mat small;
-        pyrDown(src, small);
-        src = small;
-    }
-
-
     //namedWindow("before color balance", 1);
     //imshow("before color balance", src);
 
@@ -368,19 +358,21 @@ int main(int argc, const char **argv)
         wb = xphoto::createGrayworldWB();
     else if (algorithm == "learning_based")
         wb = xphoto::createLearningBasedWB(modelFilename);
-    else
-    {
+    else {
         printf("Unsupported algorithm: %s\n", algorithm.c_str());
         return -1;
+    }
+
+    while (src.cols > 1000) {
+        Mat small;
+        pyrDown(src, small);
+        src = small;
     }
 
     wb->balanceWhite(src, res);
 
     //namedWindow("after color balance", 1);
     //imshow("after color balance", res);
-
-    //setMouseCallback("after color balance", onMouseMove, &res);
-
 
 #if 1
 
@@ -399,9 +391,9 @@ int main(int argc, const char **argv)
     CircleDetector smaller(dst);
     dst = smaller.findCircles(mSettings);
 
-    namedWindow("CircleDetector", 1);
-    setMouseCallback("CircleDetector", onMouseMove, &dst);
-    imshow("CircleDetector", dst);
+    namedWindow(hcoName, 1);
+    setMouseCallback(hcoName, onMouseMove, &dst);
+    imshow(hcoName, dst);
 
     int key = 0;
 
