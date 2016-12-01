@@ -108,15 +108,15 @@ struct EggsDetectorAlgorithmSettings
     int maxRadius;
     
     EggsDetectorAlgorithmSettings()
-        : spatialWindowRadius(6)
-        , colorWindowRadius(200)
+        : spatialWindowRadius(2)
+        , colorWindowRadius(103)
         , sharpeningWeight(40)
         , laplaccianScale(20)
         , cannyThreshold(40)
-        , accumulatorThreshold(70)
+        , accumulatorThreshold(98)
         , houghResolution(10)
         , minRadius(60)
-        , maxRadius(140)
+        , maxRadius(153)
     {      
     }
 };
