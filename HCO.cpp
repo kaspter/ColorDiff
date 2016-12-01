@@ -110,13 +110,13 @@ struct EggsDetectorAlgorithmSettings
     EggsDetectorAlgorithmSettings()
         : spatialWindowRadius(2)
         , colorWindowRadius(103)
-        , sharpeningWeight(40)
+        , sharpeningWeight(7)
         , laplaccianScale(20)
-        , cannyThreshold(40)
-        , accumulatorThreshold(98)
-        , houghResolution(10)
-        , minRadius(60)
-        , maxRadius(153)
+        , cannyThreshold(26)
+        , accumulatorThreshold(35)
+        , houghResolution(16)
+        , minRadius(66)
+        , maxRadius(75)
     {      
     }
 };
