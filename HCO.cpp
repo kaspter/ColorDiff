@@ -374,6 +374,8 @@ int main(int argc, const char **argv)
     //namedWindow("after color balance", 1);
     //imshow("after color balance", res);
 
+    color_init();
+
 #if 1
 
     Mat dst;
