@@ -12,7 +12,6 @@ using namespace std;
 
 const char *keys = { "{help h usage ? |         | print this message}"
                      "{i              |         | input image name  }"
-                     "{o              |         | output image name }"
                      "{a              |grayworld| color balance algorithm (simple, grayworld or learning_based)}"
                      "{m              |         | path to the model for the learning-based algorithm (optional) }" };
 
@@ -66,7 +65,7 @@ int color_pick_left(Mat &src, int x, int y)
 
     //putText(src, mg, cvPoint(x + 12,y + 12), FONT_HERSHEY_PLAIN, 1.0,Scalar(255, 255, 255, 0), 2);
 
-    imshow("after color balance", src);
+    //imshow("after color balance", src);
     return 0;
 }
 
@@ -96,31 +95,56 @@ void onMouseMove(int event, int x, int y, int flags, void *ustc)
  */
 struct EggsDetectorAlgorithmSettings
 {
-    int spatialWindowRadius; 
-    int colorWindowRadius;
-    int sharpeningWeight; // x100
-    int laplaccianScale;  // x100
-    int cannyThreshold;
-    int accumulatorThreshold;
+    int mSpatialWindowRadius;
+    int mColorWindowRadius;
+    int mSharpeningWeight; // x100
+    int mLaplaccianScale;  // x100
+    int mCannyThreshold;
+    int mAccumulatorThreshold;
     
-    int houghResolution;  // x10
-    int minRadius;
-    int maxRadius;
+    int mHoughResolution;  // x10
+    int mMinRadius;
+    int mMaxRadius;
     
     EggsDetectorAlgorithmSettings()
-        : spatialWindowRadius(2)
-        , colorWindowRadius(103)
-        , sharpeningWeight(7)
-        , laplaccianScale(20)
-        , cannyThreshold(26)
-        , accumulatorThreshold(35)
-        , houghResolution(16)
-        , minRadius(66)
-        , maxRadius(75)
+        : mSpatialWindowRadius(2)
+        , mColorWindowRadius(103)
+        , mSharpeningWeight(7)
+        , mLaplaccianScale(20)
+        , mCannyThreshold(26)
+        , mAccumulatorThreshold(35)
+        , mHoughResolution(16)
+        , mMinRadius(66)
+        , mMaxRadius(75)
     {      
     }
+
+    EggsDetectorAlgorithmSettings(int spatialWindowRadius,
+				    int colorWindowRadius,
+				    int sharpeningWeigh, // x100
+				    int laplaccianScale,  // x100
+				    int cannyThreshold,
+				    int accumulatorThreshold,
+
+				    int houghResolution,  // x10
+				    int minRadius,
+				    int maxRadius)
+        : mSpatialWindowRadius(spatialWindowRadius)
+        , mColorWindowRadius(colorWindowRadius)
+        , mSharpeningWeight(sharpeningWeigh)
+        , mLaplaccianScale(laplaccianScale)
+        , mCannyThreshold(cannyThreshold)
+        , mAccumulatorThreshold(accumulatorThreshold)
+        , mHoughResolution(houghResolution)
+        , mMinRadius(minRadius)
+        , mMaxRadius(maxRadius)
+    {
+    }
+
+
+
 };
- 
+
  
 class EggsDetectorAlgorithm
 {
@@ -129,7 +153,7 @@ public:
     void process(const Mat_<Vec3b>& inputRgbImage, const EggsDetectorAlgorithmSettings& settings)
     {
         //Step 1 - Filter image
-        pyrMeanShiftFiltering(inputRgbImage, filtered, settings.spatialWindowRadius, settings.colorWindowRadius, 1);
+        pyrMeanShiftFiltering(inputRgbImage, filtered, settings.mSpatialWindowRadius, settings.mColorWindowRadius, 1);
         
         //Step 2 - Increase sharpness
         cvtColor(filtered, grayImg, COLOR_BGR2GRAY);
@@ -139,8 +163,8 @@ public:
         
         Laplacian(blurredf, laplaccian, CV_32F);
         
-        float weight = 0.01f * settings.sharpeningWeight;
-        float scale  = 0.01f * settings.laplaccianScale;
+        float weight = 0.01f * settings.mSharpeningWeight;
+        float scale  = 0.01f * settings.mLaplaccianScale;
  
         Mat_<float> sharpenedf = 1.5f * grayImgf
                                    - 0.5f * blurredf
@@ -152,12 +176,12 @@ public:
         HoughCircles(sharpened,
                          circles,
                          CV_HOUGH_GRADIENT,
-                         0.1f * settings.houghResolution,
-                         settings.minRadius,
-                         settings.cannyThreshold,
-                         settings.accumulatorThreshold,
-                         settings.minRadius,
-                         settings.maxRadius );
+                         0.1f * settings.mHoughResolution,
+                         settings.mMinRadius,
+                         settings.mCannyThreshold,
+                         settings.mAccumulatorThreshold,
+                         settings.mMinRadius,
+                         settings.mMaxRadius );
 
         //Step 4 - Validate eggs
         //TODO
@@ -216,15 +240,15 @@ public:
         // create the main window, and attach the trackbars
         namedWindow( windowName, WINDOW_AUTOSIZE );
 #if 0
-        createTrackbar("Spatial window radius", windowName, &mSettings.spatialWindowRadius,  100, trackbarPropertyChanged, this);
-        createTrackbar("Color window radius",   windowName, &mSettings.colorWindowRadius,    2000, trackbarPropertyChanged, this);
-        createTrackbar("Sharpening weight",     windowName, &mSettings.sharpeningWeight,     100, trackbarPropertyChanged, this);
-        createTrackbar("Laplaccian scale",      windowName, &mSettings.laplaccianScale,      100, trackbarPropertyChanged, this);
-        createTrackbar("Canny threshold",       windowName, &mSettings.cannyThreshold,       255, trackbarPropertyChanged, this);
-        createTrackbar("Accumulator Threshold", windowName, &mSettings.accumulatorThreshold, 100, trackbarPropertyChanged, this);
-        createTrackbar("Hough resolution",      windowName, &mSettings.houghResolution,      100, trackbarPropertyChanged, this);
-        createTrackbar("Min Radius",            windowName, &mSettings.minRadius,            1500, trackbarPropertyChanged, this);
-        createTrackbar("Max Radius",            windowName, &mSettings.maxRadius,            2000, trackbarPropertyChanged, this);
+        createTrackbar("Spatial window radius", windowName, &mSettings.mSpatialWindowRadius,  100, trackbarPropertyChanged, this);
+        createTrackbar("Color window radius",   windowName, &mSettings.mColorWindowRadius,    2000, trackbarPropertyChanged, this);
+        createTrackbar("Sharpening weight",     windowName, &mSettings.mSharpeningWeight,     100, trackbarPropertyChanged, this);
+        createTrackbar("Laplaccian scale",      windowName, &mSettings.mLaplaccianScale,      100, trackbarPropertyChanged, this);
+        createTrackbar("Canny threshold",       windowName, &mSettings.mCannyThreshold,       255, trackbarPropertyChanged, this);
+        createTrackbar("Accumulator Threshold", windowName, &mSettings.mAccumulatorThreshold, 100, trackbarPropertyChanged, this);
+        createTrackbar("Hough resolution",      windowName, &mSettings.mHoughResolution,      100, trackbarPropertyChanged, this);
+        createTrackbar("Min Radius",            windowName, &mSettings.mMinRadius,            1500, trackbarPropertyChanged, this);
+        createTrackbar("Max Radius",            windowName, &mSettings.mMaxRadius,            2000, trackbarPropertyChanged, this);
 #endif
         display();
  
@@ -236,15 +260,15 @@ public:
         while(key != 'q' && key != 'Q')
         {
             // those paramaters cannot be =0 so we must check here
-            mSettings.spatialWindowRadius  = std::max(mSettings.spatialWindowRadius, 1);
-            mSettings.colorWindowRadius    = std::max(mSettings.colorWindowRadius, 1);
+            mSettings.mSpatialWindowRadius  = std::max(mSettings.mSpatialWindowRadius, 1);
+            mSettings.mColorWindowRadius    = std::max(mSettings.mColorWindowRadius, 1);
  
-            mSettings.cannyThreshold       = std::max(mSettings.cannyThreshold, 1);
-            mSettings.accumulatorThreshold = std::max(mSettings.accumulatorThreshold, 1);
+            mSettings.mCannyThreshold       = std::max(mSettings.mCannyThreshold, 1);
+            mSettings.mAccumulatorThreshold = std::max(mSettings.mAccumulatorThreshold, 1);
  
-            mSettings.houghResolution      = std::max(mSettings.houghResolution, 1);
-            mSettings.minRadius            = std::max(mSettings.minRadius, 1);
-            mSettings.maxRadius            = std::max(mSettings.maxRadius, 1);
+            mSettings.mHoughResolution      = std::max(mSettings.mHoughResolution, 1);
+            mSettings.mMinRadius            = std::max(mSettings.mMinRadius, 1);
+            mSettings.mMaxRadius            = std::max(mSettings.mMaxRadius, 1);
  
             // get user key
             key = waitKey(10);
@@ -270,6 +294,34 @@ private:
     EggsDetectorAlgorithmSettings mSettings;
     EggsDetectorAlgorithm         mAlgorithm;
 };
+
+
+#if 1
+class CircleDetector
+{
+public:
+
+    CircleDetector(const Mat_<Vec3b>& inputRgbImage)
+        : mImage(inputRgbImage)
+    {
+
+    }
+
+    Mat findCircles(const EggsDetectorAlgorithmSettings& settings) {
+
+        mAlgorithm.process(mImage, settings);
+	return mAlgorithm.display(mImage);
+    }
+
+private:
+    Mat                       mImage;
+    EggsDetectorAlgorithm         mAlgorithm;
+};
+
+#endif
+
+
+
 
 
 
@@ -330,8 +382,39 @@ int main(int argc, const char **argv)
     //setMouseCallback("after color balance", onMouseMove, &res);
 
 
+#if 1
+
+    Mat dst;
+
+    CircleDetector bigger(res);
+    struct EggsDetectorAlgorithmSettings mBigSettings(2,103,40,20,40,98,10,60,153);
+    dst = bigger.findCircles(mBigSettings);
+
+    namedWindow("first CircleDetector", 1);
+    setMouseCallback("first CircleDetector", onMouseMove, &dst);
+    imshow("first CircleDetector", dst);
+
+    struct EggsDetectorAlgorithmSettings mSettings;
+
+    CircleDetector smaller(dst);
+    dst = smaller.findCircles(mSettings);
+
+    namedWindow("CircleDetector", 1);
+    setMouseCallback("CircleDetector", onMouseMove, &dst);
+    imshow("CircleDetector", dst);
+
+    int key = 0;
+
+    while(key != 'q' && key != 'Q') {
+	// get user key
+	key = waitKey(10);
+    }
+
+
+#else
     EggsDetectorBind bind(res);
     bind.run();
+#endif
 
     return 0;
 }
