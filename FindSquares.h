@@ -23,6 +23,8 @@ void findSquares( const Mat& image, vector<vector<Point> >& squares );
 
 void drawSquares( Mat& image, const vector<vector<Point> >& squares);
 
+void drawRects( Mat& image, vector<rectPointType>& vecRect);
+
 void sortSquares(vector<vector<Point> >& squares, vector<rectPointType>& vecRect);
 
 #endif /* GPICK_COLOR_H_ */

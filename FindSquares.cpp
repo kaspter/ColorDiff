@@ -125,6 +125,22 @@ void drawSquares( Mat& image, const vector<vector<Point> >& squares )
     }
 }
 
+// the function draws all the squares in the image
+void drawRects( Mat& image, vector<rectPointType>& vecRect )
+{
+    for( size_t i = 0; i < vecRect.size(); i++ ) {
+        rectPointType rectPoint = vecRect.at(i);
+        Rect rect = rectPoint.rect;
+
+        rectangle(image,rect,Scalar(0,0,255),1,8,0);//用矩形画矩形窗
+
+        printf("rect: (%d-%d-%d-%d)\n", rect.x, rect.y, rect.width, rect.height);
+        //取正方形中心
+        Point center(rect.x + rect.width/2, rect.y + rect.height/2);
+        circle(image, center, 1, Scalar(0, 255, 0), -1, 8, 0);
+    }
+}
+
 
 bool sortFun(const rectPointType& r1, const rectPointType& r2)
 {
