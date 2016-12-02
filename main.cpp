@@ -128,21 +128,20 @@ int main(int argc, const char **argv)
     vector<rectPointType> vecRect;
 
     findSquares(wbImg, squares);
-    drawSquares(LitImg, squares);
 
     sortSquares(squares,vecRect);
 
-    //取正方形中心
-    for( size_t i = 0; i < vecRect.size(); i++ ) {
+    //drawSquares(LitImg, squares);
+    drawRects(LitImg, vecRect);
 
-        rectPointType rectPoint = vecRect.at(i);
-        Rect rect = rectPoint.rect;
+    //画最大矩形
+    rectPointType rectPoint = vecRect.at(0);
+    Rect Maxrect = rectPoint.rect;
+    //用矩形画矩形窗
+    rectangle(LitImg,Maxrect,Scalar(0,0,255),1,8,0);
 
-        printf("rect: (%d-%d-%d-%d)\n", rect.x, rect.y, rect.width, rect.height);
-        Point center(rect.x + rect.width/2, rect.y + rect.height/2);
 
-        circle(LitImg, center, 1, Scalar(0, 255, 0), -1, 8, 0);
-    }
+
 
 
     namedWindow(hcoName, 1);
