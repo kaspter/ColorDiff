@@ -142,7 +142,6 @@ void drawRects( Mat& image, vector<rectPointType>& vecRect )
 }
 
 
-
 void drawAllCenter( Mat& image, vector<rectPointType>& vecRect )
 {
     //画最大矩形
@@ -171,9 +170,9 @@ bool sortFun(const rectPointType& r1, const rectPointType& r2)
 void sortSquares(vector<vector<Point> >& squares, vector<rectPointType>& vecRect)
 {
     //取正方形中心
-    for( size_t i = 0; i < squares.size(); i++ ) {
+    for( size_t index = 0; index < squares.size(); index++ ) {
 
-        Rect rect = boundingRect(Mat(squares[i]));
+        Rect rect = boundingRect(Mat(squares[index]));
 
         rectPointType rectPoint;
         rectPoint.rect = rect;
@@ -181,23 +180,23 @@ void sortSquares(vector<vector<Point> >& squares, vector<rectPointType>& vecRect
     }
 
 
-    for (int index = 0; index < vecRect.size(); index++) {
-        rectPointType now_rect = vecRect.at(index);
+    for (size_t i = 0; i < vecRect.size(); i++) {
+        rectPointType now_rect = vecRect.at(i);
         int countInRange = 0;
 
         double now_area = now_rect.rect.width * now_rect.rect.height;
 
-        for (int i = 0; i < vecRect.size(); i++) {
+        for (size_t j = 0; j < vecRect.size(); j++) {
 
-            double area = vecRect.at(i).rect.width * vecRect.at(i).rect.height;
+            double area = vecRect.at(j).rect.width * vecRect.at(j).rect.height;
             //printf("index =%d, area = %.2f\n",index, area);
             if (now_area > area) {
                 countInRange++;
             }
         }
-        vecRect.at(index).countInRange = countInRange;
+        vecRect.at(i).countInRange = countInRange;
     }
 
-
-    sort(vecRect.begin(), vecRect.end(), sortFun);
+    if (vecRect.size() > 0)
+        sort(vecRect.begin(), vecRect.end(), sortFun);
 }
