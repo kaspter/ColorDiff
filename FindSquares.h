@@ -27,6 +27,8 @@ void drawRects( Mat& image, vector<rectPointType>& vecRect);
 
 void drawAllCenter( Mat& image, vector<rectPointType>& vecRect );
 
+void drawRectsCenter( Mat& image, rectPointType & rectPoint );
+
 void sortSquares(vector<vector<Point> >& squares, vector<rectPointType>& vecRect);
 
 #endif /* GPICK_COLOR_H_ */
