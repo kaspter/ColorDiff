@@ -19,4 +19,6 @@ int color_pick_right(Mat &src, int x, int y);
 
 double ColourDiff(const Color *a, const Color *b);
 
+float DeltaE2000(const Color *Lab1, const Color *Lab2);
+
 #endif /* GPICK_COLOR_H_ */
