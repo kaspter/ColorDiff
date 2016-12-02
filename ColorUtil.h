@@ -17,4 +17,6 @@ int color_pick_left(Mat &src, int x, int y);
 
 int color_pick_right(Mat &src, int x, int y);
 
+double ColourDiff(const Color *a, const Color *b);
+
 #endif /* GPICK_COLOR_H_ */

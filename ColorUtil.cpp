@@ -102,3 +102,14 @@ int color_pick_right(Mat &src, int x, int y)
 
     return 0;
 }
+
+
+//http://www.compuphase.com/cmetric.htm
+double ColourDiff(const Color *a, const Color *b)
+{
+  long rmean = ( (long)a->rgb.red + (long)b->rgb.red ) / 2;
+  long r = (long)a->rgb.red - (long)b->rgb.red;
+  long g = (long)a->rgb.green - (long)b->rgb.green;
+  long db = (long)a->rgb.blue - (long)b->rgb.blue;
+  return sqrt((((512+rmean)*r*r)>>8) + 4*g*g + (((767-rmean)*db*db)>>8));
+}
