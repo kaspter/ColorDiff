@@ -29,8 +29,8 @@ struct EggsDetectorAlgorithmSettings {
         , mCannyThreshold(26)
         , mAccumulatorThreshold(35)
         , mHoughResolution(16)
-        , mMinRadius(66)
-        , mMaxRadius(75)
+        , mMinRadius(85)  //89
+        , mMaxRadius(92) //94
     {
     }
 
@@ -64,12 +64,14 @@ public:
         //Step 1 - Filter image
         pyrMeanShiftFiltering(inputRgbImage, filtered, settings.mSpatialWindowRadius, settings.mColorWindowRadius, 1);
 
-        //Step 2 - Increase sharpness
+        //Step 2 - convert_to_gray
         cvtColor(filtered, grayImg, COLOR_BGR2GRAY);
         grayImg.convertTo(grayImgf, CV_32F);
 
+        //Step 3
         GaussianBlur(grayImgf, blurredf, Size(5, 5), 0);
 
+        //Step 4
         Laplacian(blurredf, laplaccian, CV_32F);
 
         float weight = 0.01f * settings.mSharpeningWeight;
@@ -81,18 +83,18 @@ public:
 
         sharpenedf.convertTo(sharpened, CV_8U);
 
-        // Step 3 - Detect circles
+        // Step 6 - Detect circles
         HoughCircles(sharpened,
                      circles,
                      CV_HOUGH_GRADIENT,
-                     0.1f * settings.mHoughResolution,
-                     settings.mMinRadius,
-                     settings.mCannyThreshold,
-                     settings.mAccumulatorThreshold,
-                     settings.mMinRadius,
-                     settings.mMaxRadius);
+                     0.1f * settings.mHoughResolution,  //
+                     settings.mMinRadius,               //两个圆之间的最小距离，
+                     settings.mCannyThreshold,          //
+                     settings.mAccumulatorThreshold,    //圆上像素点的范围，超过则成圆，否则丢弃
+                     settings.mMinRadius,               //最小圆的半径
+                     settings.mMaxRadius);              //最大圆的半径
 
-        //Step 4 - Validate eggs
+        //Step 7 - Validate circles
         //TODO
 
         //

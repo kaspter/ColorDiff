@@ -12,6 +12,9 @@ using namespace std;
 
 static const char* windowName = "Hough Circle Detection Demo";
 
+
+//http://b217dgy.blog.51cto.com/5704306/1320360
+
 EggsDetectorBind::EggsDetectorBind(const Mat_<Vec3b>& inputRgbImage)
     : mImage(inputRgbImage)
 {
