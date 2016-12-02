@@ -8,6 +8,7 @@
 #include "Color.h"
 #include "ColorUtil.h"
 #include "HoughCircle.h"
+#include "FindSquares.h"
 
 using namespace cv;
 using namespace std;
@@ -74,7 +75,7 @@ int main(int argc, const char **argv)
     //namedWindow("before color balance", 1);
     //imshow("before color balance", src);
 
-    Mat res;
+    Mat wbImg;
     Ptr<xphoto::WhiteBalancer> wb;
     if (algorithm == "simple")
         wb = xphoto::createSimpleWB();
@@ -94,34 +95,64 @@ int main(int argc, const char **argv)
         src = small;
     }
 
-    wb->balanceWhite(src, res);
+    wb->balanceWhite(src, wbImg);
 
     //namedWindow("after color balance", 1);
-    //imshow("after color balance", res);
+    //imshow("after color balance", wbImg);
 
     color_init();
 
+
+
 #if 1
 
-    Mat dst;
+    Mat BigImg;
+    Mat LitImg;
 
-    CircleDetector bigger(res);
+    CircleDetector bigger(wbImg);
     //2,103,40,20,40,98,10,170,260
     struct EggsDetectorAlgorithmSettings mBigSettings(2,103,40,20,40,98,10,148,240);
-    dst = bigger.findCircles(mBigSettings);
+    BigImg = bigger.findCircles(mBigSettings);
 
     namedWindow("first CircleDetector", 1);
-    setMouseCallback("first CircleDetector", onMouseMove, &dst);
-    imshow("first CircleDetector", dst);
+    setMouseCallback("first CircleDetector", onMouseMove, &BigImg);
+    imshow("first CircleDetector", BigImg);
 
     struct EggsDetectorAlgorithmSettings mSettings(2,103,7,20,26,35,12,/*86*/87,92);
 
-    CircleDetector smaller(dst);
-    dst = smaller.findCircles(mSettings);
+    CircleDetector smaller(BigImg);
+    LitImg = smaller.findCircles(mSettings);
+
+
+    vector<vector<Point> > squares;
+    vector<rectPointType> vecRect;
+
+    findSquares(wbImg, squares);
+    drawSquares(LitImg, squares);
+
+    sortSquares(squares,vecRect);
+
+    //取正方形中心
+    for( size_t i = 0; i < vecRect.size(); i++ ) {
+
+        rectPointType rectPoint = vecRect.at(i);
+        Rect rect = rectPoint.rect;
+
+        printf("rect: (%d-%d-%d-%d)\n", rect.x, rect.y, rect.width, rect.height);
+        Point center(rect.x + rect.width/2, rect.y + rect.height/2);
+
+        circle(LitImg, center, 1, Scalar(0, 255, 0), -1, 8, 0);
+    }
+
 
     namedWindow(hcoName, 1);
-    setMouseCallback(hcoName, onMouseMove, &dst);
-    imshow(hcoName, dst);
+    setMouseCallback(hcoName, onMouseMove, &LitImg);
+    imshow(hcoName, LitImg);
+
+
+
+
+
 
     int key = 0;
 
@@ -132,7 +163,7 @@ int main(int argc, const char **argv)
 
 
 #else
-    EggsDetectorBind bind(res);
+    EggsDetectorBind bind(wbImg);
     bind.run();
 #endif
 

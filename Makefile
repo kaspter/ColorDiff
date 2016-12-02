@@ -18,5 +18,5 @@ clean:
 	@rm -vf $(TOOLS) *.o
 
 
-HCO: main.cpp Color.cpp ColorUtil.cpp MathUtil.cpp HoughCircle.cpp
+HCO: main.cpp Color.cpp ColorUtil.cpp MathUtil.cpp HoughCircle.cpp FindSquares.cpp
 	$(CC) $(CFLAGS) -o $@ $(filter %.cpp,$^) $(LDFLAGS)
