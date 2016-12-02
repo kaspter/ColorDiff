@@ -142,6 +142,26 @@ void drawRects( Mat& image, vector<rectPointType>& vecRect )
 }
 
 
+
+void drawAllCenter( Mat& image, vector<rectPointType>& vecRect )
+{
+    //画最大矩形
+    rectPointType rectPoint = vecRect.at(0);
+    Rect maxRect = rectPoint.rect;
+    //用矩形画矩形窗
+    rectangle(image, maxRect,Scalar(0,0,255),1,8,0);
+    printf("maxRect: (%d-%d-%d-%d)\n", maxRect.x, maxRect.y, maxRect.width, maxRect.height);
+
+    for (size_t i = 0; i < 14; i++) {
+        Point center;
+        center.x = maxRect.x + i * maxRect.width / 14 +  maxRect.width / 28;
+        for (size_t j = 0; j < 14; j++) {
+            center.y = maxRect.y + j * maxRect.height / 14 +  maxRect.height / 28;
+            circle(image, center, 1, Scalar(0, 255, 0), -1, 8, 0);
+        }
+    }
+}
+
 bool sortFun(const rectPointType& r1, const rectPointType& r2)
 {
     return (r1.countInRange > r2.countInRange);
