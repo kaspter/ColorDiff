@@ -39,9 +39,14 @@ double angle( Point pt1, Point pt2, Point pt0 ) {
 void findSquares( const Mat& image, vector<vector<Point> >& squares )
 {
     squares.clear();
+
+    //二值化
+    Mat thresh;
+    threshold(image, thresh, 175, 255, CV_THRESH_BINARY);
+
     // blur will enhance edge detection
-    Mat blurred(image);
-    medianBlur(image, blurred, 9);
+    Mat blurred(thresh);
+    medianBlur(thresh, blurred, 9);
 
     Mat gray0(blurred.size(), CV_8U), gray;
 
@@ -149,7 +154,7 @@ void sortSquares(vector<vector<Point> >& squares, vector<rectPointType>& vecRect
         for (int i = 0; i < vecRect.size(); i++) {
 
             double area = vecRect.at(i).rect.width * vecRect.at(i).rect.height;
-            printf("index =%d, area = %.2f\n",index, area);
+            //printf("index =%d, area = %.2f\n",index, area);
             if (now_area > area) {
                 countInRange++;
             }
