@@ -40,7 +40,8 @@ void onMouseMove(int event, int x, int y, int flags, void *ustc)
     case CV_EVENT_LBUTTONUP:
         break;
     case CV_EVENT_RBUTTONDOWN:
-        imshow("after color balance", src);
+        color_pick_right(src, x, y);
+        imshow(hcoName, src);
         break;
     }
 }

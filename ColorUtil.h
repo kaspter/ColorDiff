@@ -15,4 +15,6 @@ int color_pick(Mat &src, int x, int y);
 
 int color_pick_left(Mat &src, int x, int y);
 
+int color_pick_right(Mat &src, int x, int y);
+
 #endif /* GPICK_COLOR_H_ */
