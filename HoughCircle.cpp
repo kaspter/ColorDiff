@@ -25,7 +25,7 @@ void EggsDetectorBind::run(void)
 
     // create the main window, and attach the trackbars
     namedWindow(windowName, WINDOW_AUTOSIZE);
-#if 0
+#if 1
         createTrackbar("Spatial window radius", windowName, &mSettings.mSpatialWindowRadius,  100, trackbarPropertyChanged, this);
         createTrackbar("Color window radius",   windowName, &mSettings.mColorWindowRadius,    2000, trackbarPropertyChanged, this);
         createTrackbar("Sharpening weight",     windowName, &mSettings.mSharpeningWeight,     100, trackbarPropertyChanged, this);

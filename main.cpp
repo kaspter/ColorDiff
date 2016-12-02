@@ -106,14 +106,15 @@ int main(int argc, const char **argv)
     Mat dst;
 
     CircleDetector bigger(res);
-    struct EggsDetectorAlgorithmSettings mBigSettings(2,103,40,20,40,98,10,170,260);
+    //2,103,40,20,40,98,10,170,260
+    struct EggsDetectorAlgorithmSettings mBigSettings(2,103,40,20,40,98,10,148,240);
     dst = bigger.findCircles(mBigSettings);
 
     namedWindow("first CircleDetector", 1);
     setMouseCallback("first CircleDetector", onMouseMove, &dst);
     imshow("first CircleDetector", dst);
 
-    struct EggsDetectorAlgorithmSettings mSettings(2,103,7,20,26,35,16,/*86*/87,92);
+    struct EggsDetectorAlgorithmSettings mSettings(2,103,7,20,26,35,12,/*86*/87,92);
 
     CircleDetector smaller(dst);
     dst = smaller.findCircles(mSettings);

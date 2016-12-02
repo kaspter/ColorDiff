@@ -24,13 +24,13 @@ struct EggsDetectorAlgorithmSettings {
     EggsDetectorAlgorithmSettings()
         : mSpatialWindowRadius(2)
         , mColorWindowRadius(103)
-        , mSharpeningWeight(7)
+        , mSharpeningWeight(40)
         , mLaplaccianScale(20)
-        , mCannyThreshold(26)
-        , mAccumulatorThreshold(35)
-        , mHoughResolution(16)
-        , mMinRadius(85)  //89
-        , mMaxRadius(92) //94
+        , mCannyThreshold(40)
+        , mAccumulatorThreshold(98)
+        , mHoughResolution(10)
+        , mMinRadius(148)  //89
+        , mMaxRadius(215) //94
     {
     }
 
@@ -110,7 +110,7 @@ public:
 
             //color_pick(display, cvRound(circles[i][0]),cvRound(circles[i][1]));
 
-            printf("center: (%d,%d-%d)\n", cvRound(circles[i][0]), cvRound(circles[i][1]), radius);
+            printf("circle center: (%d,%d-%d)\n", cvRound(circles[i][0]), cvRound(circles[i][1]), radius);
             // circle center
             circle(display, center, 3, Scalar(0, 255, 0), -1, 8, 0);
             // circle outline
