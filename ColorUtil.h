@@ -21,4 +21,6 @@ double ColourDiff(const Color *a, const Color *b);
 
 float DeltaE2000(const Color *Lab1, const Color *Lab2);
 
+float color_diff(Mat &src, Point & pt1, Point & pt2);
+
 #endif /* GPICK_COLOR_H_ */

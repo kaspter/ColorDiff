@@ -123,6 +123,39 @@ double ColourDiff(const Color *a, const Color *b)
 
 
 
+float color_diff(Mat &src, Point & pt1, Point & pt2)
+{
+    Color rgb1, rgb2;
+    Color lab1, lab2;
+
+    int cPointR,cPointG,cPointB;
+
+    int x1 = pt1.x;
+    int y1 = pt1.y;
+    int x2 = pt2.x;
+    int y2 = pt2.y;
+
+    cPointB = src.at<Vec3b>(y1,x1)[0];
+    cPointG = src.at<Vec3b>(y1,x1)[1];
+    cPointR = src.at<Vec3b>(y1,x1)[2];
+    color_set(&rgb1, cPointR, cPointG, cPointB);
+
+    cPointB = src.at<Vec3b>(y2,x2)[0];
+    cPointG = src.at<Vec3b>(y2,x2)[1];
+    cPointR = src.at<Vec3b>(y2,x2)[2];
+    color_set(&rgb2, cPointR, cPointG, cPointB);
+
+    color_rgb_to_lab_d50(&rgb1,&lab1);
+    color_rgb_to_lab_d50(&rgb2,&lab2);
+
+    float cie94 = color_distance_lch(&lab1, &lab2);
+    float cie2k = DeltaE2000(&lab1, &lab2);
+
+    printf("[%f-%f]\n", cie94,cie2k);
+
+    return cie2k;
+}
+
 
 
  //
