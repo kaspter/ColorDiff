@@ -31,4 +31,7 @@ void drawRectsCenter( Mat& image, rectPointType & rectPoint );
 
 void sortSquares(vector<vector<Point> >& squares, vector<rectPointType>& vecRect);
 
+int findAllRectCenter( Mat& image, vector<rectPointType>& vecRect, vector<Point>& Points);
+
+
 #endif /* GPICK_COLOR_H_ */

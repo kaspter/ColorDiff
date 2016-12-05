@@ -89,6 +89,7 @@ int main(int argc, const char **argv)
     }
 
     //cvResize()，cvPyrDown(),cvPyrSegmentation()
+    printf("col = %d\n", src.cols);
     while (src.cols > 1000) {
         Mat small;
         pyrDown(src, small);
@@ -152,12 +153,35 @@ int main(int argc, const char **argv)
 
     //drawSquares(LitImg, squares);
     //drawRects(LitImg, vecRect);
+    //drawAllCenter(LitImg, vecRect );
+
+    //int ColorIndex[26] = {  3,   8,   9,  17,  22,  23,  42,  43,  44,  57,  84,  97,  98,
+    //                      110, 111, 112, 126, 140, 152, 166, 167, 171, 175, 176, 177, 185};
 
 
-    drawAllCenter(LitImg, vecRect );
+    int ColorIndex[26] = {   3,   6,   7,   8,   9,  17,  18,  31,  42, 43,  54,   55, 110,
+                           112,  113, 124, 126, 127, 138, 175, 177, 178, 179, 188,189, 193};
+
+    vector<Point> vecHPoints;   //HCHO Points
+    vector<Point> vecCPoints;   //Color Points
+
+
+    int num = findAllRectCenter(LitImg, vecRect, vecHPoints);
+
+    for (int index = 0; index < 26; index++) {
+        Point center = vecHPoints.at(ColorIndex[index]);
+        circle(LitImg, center, 1, Scalar(0, 255, 0), -1, 8, 0);
+    }
 
 
 
+    CvRNG rng;
+    rng= cvRNG(cvGetTickCount());
+    printf("=======================\n");
+    for (int i= 0;i<20;i++) {
+        printf("%d\n",cvRandInt(&rng)%20);//如果%6出来的将会是0~5的正整数
+    }
+    printf("=======================\n");
 
     namedWindow(hcoName, 1);
     setMouseCallback(hcoName, onMouseMove, &LitImg);
