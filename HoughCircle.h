@@ -173,5 +173,6 @@ private:
 
 int findCircles(const Mat_<Vec3b>& inputRgbImage, vector<Vec3f>& circles, const EggsDetectorAlgorithmSettings& settings);
 Mat drawCircles(const Mat& colorImg, vector<Vec3f>& circles);
+void sortCircles(vector<Vec3f>& circles);
 
 #endif /* GPICK_COLOR_H_ */

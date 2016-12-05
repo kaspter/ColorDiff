@@ -409,7 +409,8 @@ int findCircles(const Mat_<Vec3b>& inputRgbImage, vector<Vec3f>& circles, const 
     //Step 7 - Validate circles
     //TODO
 
-    //
+    //按照直径从大到小排序
+    sortCircles(circles);
 
     return circles.size();
 }
@@ -432,4 +433,17 @@ Mat drawCircles(const Mat& colorImg, vector<Vec3f>& circles)
     }
 
     return display;
+}
+
+
+static bool sortCircleFun(const Vec3f& c1, const Vec3f& c2)
+{
+    return (cvRound(c1[2]) > cvRound(c2[2]));
+}
+
+
+void sortCircles(vector<Vec3f>& circles)
+{
+    if (circles.size() > 0)
+        sort(circles.begin(), circles.end(), sortCircleFun);
 }
