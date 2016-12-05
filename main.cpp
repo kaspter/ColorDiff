@@ -109,6 +109,7 @@ int main(int argc, const char **argv)
     Mat BigImg;
     Mat LitImg;
 
+#if 0
     CircleDetector bigger(wbImg);
     //2,103,40,20,40,98,10,170,260
     struct EggsDetectorAlgorithmSettings mBigSettings(2,103,40,20,40,98,10,148,240);
@@ -122,6 +123,24 @@ int main(int argc, const char **argv)
 
     CircleDetector smaller(BigImg);
     LitImg = smaller.findCircles(mSettings);
+#else
+
+    vector<Vec3f> bCircles;
+    struct EggsDetectorAlgorithmSettings mBigSettings(2,103,40,20,40,98,10,148,240);
+    int ret = findCircles(wbImg, bCircles, mBigSettings);
+
+    printf("big = %d\n", ret);
+    BigImg = drawCircles(wbImg,bCircles);
+
+
+    vector<Vec3f> lCircles;
+    struct EggsDetectorAlgorithmSettings mLitSettings(2,103,7,20,26,35,12,/*86*/87,92);
+    ret = findCircles(BigImg, lCircles, mLitSettings);
+
+    printf("lit = %d\n", ret);
+    LitImg = drawCircles(BigImg,lCircles);
+
+#endif
 
 
     vector<vector<Point> > squares;

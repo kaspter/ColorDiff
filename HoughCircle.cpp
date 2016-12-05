@@ -12,7 +12,6 @@ using namespace std;
 
 static const char* windowName = "Hough Circle Detection Demo";
 
-
 //http://b217dgy.blog.51cto.com/5704306/1320360
 
 EggsDetectorBind::EggsDetectorBind(const Mat_<Vec3b>& inputRgbImage)
@@ -26,15 +25,15 @@ void EggsDetectorBind::run(void)
     // create the main window, and attach the trackbars
     namedWindow(windowName, WINDOW_AUTOSIZE);
 #if 1
-        createTrackbar("Spatial window radius", windowName, &mSettings.mSpatialWindowRadius,  100, trackbarPropertyChanged, this);
-        createTrackbar("Color window radius",   windowName, &mSettings.mColorWindowRadius,    2000, trackbarPropertyChanged, this);
-        createTrackbar("Sharpening weight",     windowName, &mSettings.mSharpeningWeight,     100, trackbarPropertyChanged, this);
-        createTrackbar("Laplaccian scale",      windowName, &mSettings.mLaplaccianScale,      100, trackbarPropertyChanged, this);
-        createTrackbar("Canny threshold",       windowName, &mSettings.mCannyThreshold,       255, trackbarPropertyChanged, this);
-        createTrackbar("Accumulator Threshold", windowName, &mSettings.mAccumulatorThreshold, 100, trackbarPropertyChanged, this);
-        createTrackbar("Hough resolution",      windowName, &mSettings.mHoughResolution,      100, trackbarPropertyChanged, this);
-        createTrackbar("Min Radius",            windowName, &mSettings.mMinRadius,            1500, trackbarPropertyChanged, this);
-        createTrackbar("Max Radius",            windowName, &mSettings.mMaxRadius,            2000, trackbarPropertyChanged, this);
+    createTrackbar("Spatial window radius", windowName, &mSettings.mSpatialWindowRadius, 100, trackbarPropertyChanged, this);
+    createTrackbar("Color window radius", windowName, &mSettings.mColorWindowRadius, 2000, trackbarPropertyChanged, this);
+    createTrackbar("Sharpening weight", windowName, &mSettings.mSharpeningWeight, 100, trackbarPropertyChanged, this);
+    createTrackbar("Laplaccian scale", windowName, &mSettings.mLaplaccianScale, 100, trackbarPropertyChanged, this);
+    createTrackbar("Canny threshold", windowName, &mSettings.mCannyThreshold, 255, trackbarPropertyChanged, this);
+    createTrackbar("Accumulator Threshold", windowName, &mSettings.mAccumulatorThreshold, 100, trackbarPropertyChanged, this);
+    createTrackbar("Hough resolution", windowName, &mSettings.mHoughResolution, 100, trackbarPropertyChanged, this);
+    createTrackbar("Min Radius", windowName, &mSettings.mMinRadius, 1500, trackbarPropertyChanged, this);
+    createTrackbar("Max Radius", windowName, &mSettings.mMaxRadius, 2000, trackbarPropertyChanged, this);
 #endif
     display();
 
@@ -363,3 +362,74 @@ CV_IMPL CvSeq* cvFindCircles( CvArr* src_image, Mat &contour_image, void* circle
 }
 
 #endif
+
+int findCircles(const Mat_<Vec3b>& inputRgbImage, vector<Vec3f>& circles, const EggsDetectorAlgorithmSettings& settings)
+{
+
+    Mat         filtered;
+    Mat         grayImg;
+    Mat         grayImgf;
+    Mat_<float> blurredf;
+    Mat_<float> laplaccian;
+    Mat         sharpened;
+
+    //Step 1 - Filter image
+    pyrMeanShiftFiltering(inputRgbImage, filtered, settings.mSpatialWindowRadius, settings.mColorWindowRadius, 1);
+
+    //Step 2 - convert_to_gray
+    cvtColor(filtered, grayImg, COLOR_BGR2GRAY);
+    grayImg.convertTo(grayImgf, CV_32F);
+
+    //Step 3
+    GaussianBlur(grayImgf, blurredf, Size(5, 5), 0);
+
+    //Step 4
+    Laplacian(blurredf, laplaccian, CV_32F);
+
+    float weight = 0.01f * settings.mSharpeningWeight;
+    float scale  = 0.01f * settings.mLaplaccianScale;
+
+    Mat_<float> sharpenedf = 1.5f * grayImgf
+        - 0.5f * blurredf
+        - weight * grayImgf.mul(scale * laplaccian);
+
+    sharpenedf.convertTo(sharpened, CV_8U);
+
+    // Step 6 - Detect circles
+    HoughCircles(sharpened,
+                 circles,
+                 CV_HOUGH_GRADIENT,
+                 0.1f * settings.mHoughResolution, //
+                 settings.mMinRadius,              //两个圆之间的最小距离，
+                 settings.mCannyThreshold,         //
+                 settings.mAccumulatorThreshold,   //圆上像素点的范围，超过则成圆，否则丢弃
+                 settings.mMinRadius,              //最小圆的半径
+                 settings.mMaxRadius);             //最大圆的半径
+
+    //Step 7 - Validate circles
+    //TODO
+
+    //
+
+    return circles.size();
+}
+
+Mat drawCircles(const Mat& colorImg, vector<Vec3f>& circles)
+{
+    // clone the colour, input image for displaying purposes
+    Mat display = colorImg.clone();
+    for (size_t i = 0; i < circles.size(); i++) {
+        Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
+        int   radius = cvRound(circles[i][2]);
+
+        //color_pick(display, cvRound(circles[i][0]),cvRound(circles[i][1]));
+
+        printf("circle center: (%d,%d-%d)\n", cvRound(circles[i][0]), cvRound(circles[i][1]), radius);
+        // circle center
+        circle(display, center, 3, Scalar(0, 255, 0), -1, 8, 0);
+        // circle outline
+        circle(display, center, radius, Scalar(0, 0, 255), 3, 8, 0);
+    }
+
+    return display;
+}

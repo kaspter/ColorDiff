@@ -29,7 +29,7 @@ struct EggsDetectorAlgorithmSettings {
         , mCannyThreshold(40)
         , mAccumulatorThreshold(98)
         , mHoughResolution(10)
-        , mMinRadius(148)  //89
+        , mMinRadius(148) //89
         , mMaxRadius(215) //94
     {
     }
@@ -87,12 +87,12 @@ public:
         HoughCircles(sharpened,
                      circles,
                      CV_HOUGH_GRADIENT,
-                     0.1f * settings.mHoughResolution,  //
-                     settings.mMinRadius,               //两个圆之间的最小距离，
-                     settings.mCannyThreshold,          //
-                     settings.mAccumulatorThreshold,    //圆上像素点的范围，超过则成圆，否则丢弃
-                     settings.mMinRadius,               //最小圆的半径
-                     settings.mMaxRadius);              //最大圆的半径
+                     0.1f * settings.mHoughResolution, //
+                     settings.mMinRadius,              //两个圆之间的最小距离，
+                     settings.mCannyThreshold,         //
+                     settings.mAccumulatorThreshold,   //圆上像素点的范围，超过则成圆，否则丢弃
+                     settings.mMinRadius,              //最小圆的半径
+                     settings.mMaxRadius);             //最大圆的半径
 
         //Step 7 - Validate circles
         //TODO
@@ -170,5 +170,8 @@ private:
     EggsDetectorAlgorithmSettings mSettings;
     EggsDetectorAlgorithm         mAlgorithm;
 };
+
+int findCircles(const Mat_<Vec3b>& inputRgbImage, vector<Vec3f>& circles, const EggsDetectorAlgorithmSettings& settings);
+Mat drawCircles(const Mat& colorImg, vector<Vec3f>& circles);
 
 #endif /* GPICK_COLOR_H_ */
