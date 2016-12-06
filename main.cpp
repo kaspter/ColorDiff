@@ -41,8 +41,8 @@ void onMouseMove(int event, int x, int y, int flags, void* ustc)
     }
 }
 
-#define MAX_CIRCLE_POINTS 102
-#define MAX_COLOR_POINTS 102
+#define MAX_HCHO_POINTS 52  //甲醛取点个数
+#define MAX_COLOR_POINTS 52 //色卡取点个数
 
 //在点Center 附近scope 范围内的4个象县随机生成
 int genRandPoints(Point& Center, int scope, size_t num, vector<Vec3f>& oCircles)
@@ -84,9 +84,9 @@ int genRandPoints(Point& Center, int scope, size_t num, vector<Vec3f>& oCircles)
 //色差相差最大的两个点
 int eraseRandPoints(Mat& image, vector<Vec3f>& oCircles)
 {
-    float  colorDelta = 0;
-    int    iIndex     = -1;
-    int    jIndex     = -1;
+    float colorDelta = 0;
+    int   iIndex     = -1;
+    int   jIndex     = -1;
     for (size_t i = 0; i < oCircles.size(); i++) {
 
         Point iCenter(cvRound(oCircles[i][0]), cvRound(oCircles[i][1]));
@@ -124,9 +124,9 @@ int calcCirclePoints(Mat& image, vector<Vec3f>& bCircles, vector<Vec3f>& lCircle
     int   MaxCircleRadius = cvRound(bCircles[0][2]);
 
     //生成随即点
-    genRandPoints(MaxCircleCenter, MaxCircleRadius / 3, MAX_CIRCLE_POINTS, oCircles);
+    genRandPoints(MaxCircleCenter, MaxCircleRadius / 3, MAX_HCHO_POINTS, oCircles);
 
-    //排除在小圆内的点,不足MAX_CIRCLE_POINTS个点重新取点
+    //排除在小圆内的点,不足MAX_HCHO_POINTS个点重新取点
     for (i = 0; i < lCircles.size(); i++) {
 
         Point iCenter(cvRound(lCircles[i][0]), cvRound(lCircles[i][1]));
@@ -147,7 +147,7 @@ int calcCirclePoints(Mat& image, vector<Vec3f>& bCircles, vector<Vec3f>& lCircle
 
 int calcColorPoints(Mat& image, vector<rectPointType>& vecRect, vector<Point>& Points, vector<Vec3f>& oCircles /*vector<vector<Point> >& colorPoints*/)
 {
-    Rect   maxRect;
+    Rect maxRect;
 
     oCircles.clear();
 
@@ -244,39 +244,6 @@ void sortWinColorScore(vector<WinColorScore>& scores)
         sort(scores.begin(), scores.end(), sortWinScoreFun);
 }
 
-int findMaxScoreOnce(Mat& image, vector<Vec3f>& ColorCircles, vector<Vec3f>& HchoCircles, vector<WinColorScore>& winScores, int loop)
-{
-
-    for (size_t i = 0; i < HchoCircles.size(); i++) {
-
-        Point HchoPoint(cvRound(HchoCircles[i][0]), cvRound(HchoCircles[i][1]));
-
-        vector<DeltaColorScore> deltaScores;
-
-        for (size_t j = 0; j < 26; j++) {
-
-            DeltaColorScore iscore;
-
-            Vec3f Circles = ColorCircles.at(j * (MAX_COLOR_POINTS - 2) + loop);
-            Point ColorPoint(cvRound(Circles[0]), cvRound(Circles[1]));
-
-            iscore.delta = color_diff(image, HchoPoint, ColorPoint);
-            iscore.index = j;
-            deltaScores.push_back(iscore);
-        }
-
-        sortDeltaColorScore(deltaScores);
-        //printf("HCHO point index = %lu, winGroup = %d\n", i, deltaScores.at(0).index);
-
-        int            winIndex = deltaScores.at(0).index;
-        WinColorScore& wScore   = winScores.at(winIndex);
-        wScore.wins++;
-    }
-
-    return 0;
-}
-
-
 int findMaxScore(Mat& image, vector<Vec3f>& ColorCircles, vector<Vec3f>& HchoCircles, vector<WinColorScore>& winScores)
 {
     for (size_t i = 0; i < 26; i++) {
@@ -286,8 +253,35 @@ int findMaxScore(Mat& image, vector<Vec3f>& ColorCircles, vector<Vec3f>& HchoCir
         winScores.push_back(wScores);
     }
 
-    for (size_t i = 0; i < (MAX_COLOR_POINTS - 2); i++) {
-        findMaxScoreOnce(image, ColorCircles, HchoCircles, winScores, i);
+    for (size_t i = 0; i < HchoCircles.size(); i++) {
+
+        Point HchoPoint(cvRound(HchoCircles[i][0]), cvRound(HchoCircles[i][1]));
+
+        vector<DeltaColorScore> deltaScores;
+
+        for (size_t z = 0; z < (MAX_COLOR_POINTS - 2); z++) {
+
+            for (size_t j = 0; j < 26; j++) {
+
+                DeltaColorScore iscore;
+
+                Vec3f Circles = ColorCircles.at(j * (MAX_COLOR_POINTS - 2) + z);
+
+                Point ColorPoint(cvRound(Circles[0]), cvRound(Circles[1]));
+
+                iscore.delta = color_diff(image, HchoPoint, ColorPoint);
+                iscore.index = j;
+                deltaScores.push_back(iscore);
+            }
+
+            sortDeltaColorScore(deltaScores);
+
+            //printf("HCHO point index = %lu, winGroup = %d\n", i, deltaScores.at(0).index);
+
+            int            winIndex = deltaScores.at(0).index;
+            WinColorScore& wScore   = winScores.at(winIndex);
+            wScore.wins++;
+        }
     }
 
     sortWinColorScore(winScores);
@@ -405,9 +399,8 @@ int main(int argc, const char** argv)
     int ColorIndex[26] = { 3, 6, 7, 8, 9, 17, 18, 31, 42, 43, 54, 55, 110,
                            112, 113, 124, 126, 127, 138, 175, 177, 178, 179, 188, 189, 193 };
 
-
     float ColorHcho[26] = { 0.35, 0.09, 0.02, 0.45, 0.13, 0.05, 0.18, 0.12, 0.25, 0.06, 0.07, 0.19, 0.10,
-                           0.30, 0.14, 0.16, 0.15, 0.03, 0.11, 0.01, 0.08, 0.17, 0.04, 0.40, 0.20, 0.50 };
+                            0.30, 0.14, 0.16, 0.15, 0.03, 0.11, 0.01, 0.08, 0.17, 0.04, 0.40, 0.20, 0.50 };
 
     int num = findAllRectCenter(LitImg, vecRect, vecHPoints);
 
@@ -431,10 +424,7 @@ int main(int argc, const char** argv)
     findMaxScore(LitImg, colorPoints, hcoPoints, winScores);
     printf("finale winIndex = %d, ppm = %.2f, wins = %d\n", winScores.at(0).index, ColorHcho[winScores.at(0).index], winScores.at(0).wins);
 
-    //显示结果
-
-
-
+//显示结果
 
 #if 1
     for (size_t i = 0; i < colorPoints.size(); i++) {
