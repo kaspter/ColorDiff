@@ -427,7 +427,7 @@ Mat drawCircles(const Mat& colorImg, vector<Vec3f>& circles)
 
         printf("circle center: (%d,%d-%d)\n", cvRound(circles[i][0]), cvRound(circles[i][1]), radius);
         // circle center
-        circle(display, center, 3, Scalar(0, 255, 0), -1, 8, 0);
+        //circle(display, center, 3, Scalar(0, 255, 0), -1, 8, 0);
         // circle outline
         circle(display, center, radius, Scalar(0, 0, 255), 3, 8, 0);
     }

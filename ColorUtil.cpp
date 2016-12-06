@@ -140,10 +140,15 @@ float color_diff(Mat &src, Point & pt1, Point & pt2)
     cPointR = src.at<Vec3b>(y1,x1)[2];
     color_set(&rgb1, cPointR, cPointG, cPointB);
 
+    //printf("x1=%d, y1=%d, #%02X%02X%02X ", x1, y1, cPointR,cPointG,cPointB);
+
+
     cPointB = src.at<Vec3b>(y2,x2)[0];
     cPointG = src.at<Vec3b>(y2,x2)[1];
     cPointR = src.at<Vec3b>(y2,x2)[2];
     color_set(&rgb2, cPointR, cPointG, cPointB);
+
+    //printf("x2=%d, y2=%d, #%02X%02X%02X\n", x2, y2, cPointR,cPointG,cPointB);
 
     color_rgb_to_lab_d50(&rgb1,&lab1);
     color_rgb_to_lab_d50(&rgb2,&lab2);
@@ -151,7 +156,7 @@ float color_diff(Mat &src, Point & pt1, Point & pt2)
     float cie94 = color_distance_lch(&lab1, &lab2);
     float cie2k = DeltaE2000(&lab1, &lab2);
 
-    printf("[%f-%f]\n", cie94,cie2k);
+    //printf("[%f-%f]\n", cie94,cie2k);
 
     return cie2k;
 }
