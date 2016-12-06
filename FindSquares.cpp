@@ -69,8 +69,8 @@ void findSquares( const Mat& image, vector<vector<Point> >& squares )
                 Canny(gray0, gray, 180, 250, 5); //
                 //Canny(gray0, gray, 0, 50, 5); //
 
-                namedWindow("canny", 1);
-                imshow("canny", gray);
+                //namedWindow("canny", 1);
+                //imshow("canny", gray);
 
 
 
