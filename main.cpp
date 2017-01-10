@@ -338,28 +338,11 @@ int main(int argc, const char** argv)
 
     color_init();
 
-#if 1
-
     int key;
     Mat BigImg;
     Mat LitImg;
 
-#if 0
-    CircleDetector bigger(wbImg);
-    //2,103,40,20,40,98,10,170,260
-    struct EggsDetectorAlgorithmSettings mBigSettings(2,103,40,20,40,98,10,148,240);
-    BigImg = bigger.findCircles(mBigSettings);
-
-    namedWindow("first CircleDetector", 1);
-    setMouseCallback("first CircleDetector", onMouseMove, &BigImg);
-    imshow("first CircleDetector", BigImg);
-
-    struct EggsDetectorAlgorithmSettings mSettings(2,103,7,20,26,35,12,/*86*/87,92);
-
-    CircleDetector smaller(BigImg);
-    LitImg = smaller.findCircles(mSettings);
-#else
-
+#if 1
     vector<Vec3f>                        bCircles;
     struct EggsDetectorAlgorithmSettings mBigSettings(2, 103, 40, 20, 40, 98, 10, 148, 240);
     int                                  ret;
@@ -375,13 +358,9 @@ int main(int argc, const char** argv)
     printf("lit = %d\n", ret);
     LitImg = drawCircles(BigImg, lCircles);
 
-#endif
-
     //识别矩形
     vector<rectPointType>  vecRect;
     findRects(wbImg, vecRect);
-
-
 
     //色卡定位
     vector<Point> vecHPoints; //所有色块中心点
@@ -414,8 +393,6 @@ int main(int argc, const char** argv)
     vector<WinColorScore> winScores;
     findMaxScore(LitImg, colorPoints, hcoPoints, winScores);
 
-
-
 //显示结果
     int blockIdx = ColorIndex[winScores.at(0).index];
 
@@ -425,14 +402,15 @@ int main(int argc, const char** argv)
     circle(LitImg, block, 6, Scalar(0, 0, 255), -1, 8, 0);
 
 #if 1
-
+    //标出所有巨型
     drawRects(LitImg, vecRect);
 
+    //标出色卡取点
     for (size_t i = 0; i < colorPoints.size(); i++) {
         Point center(cvRound(colorPoints[i][0]), cvRound(colorPoints[i][1]));
         circle(LitImg, center, 1, Scalar(0, 255, 0), -1, 8, 0);
     }
-
+    //标出甲醛取点
     for (size_t i = 0; i < hcoPoints.size(); i++) {
         Point center(cvRound(hcoPoints[i][0]), cvRound(hcoPoints[i][1]));
         circle(LitImg, center, 1, Scalar(0, 255, 0), -1, 8, 0);
@@ -452,6 +430,20 @@ int main(int argc, const char** argv)
     }
 
 #else
+    CircleDetector bigger(wbImg);
+    //2,103,40,20,40,98,10,170,260
+    struct EggsDetectorAlgorithmSettings mBigSettings(2,103,40,20,40,98,10,148,240);
+    BigImg = bigger.findCircles(mBigSettings);
+
+    namedWindow("first CircleDetector", 1);
+    setMouseCallback("first CircleDetector", onMouseMove, &BigImg);
+    imshow("first CircleDetector", BigImg);
+
+    struct EggsDetectorAlgorithmSettings mSettings(2,103,7,20,26,35,12,/*86*/87,92);
+
+    CircleDetector smaller(BigImg);
+    LitImg = smaller.findCircles(mSettings);
+
     EggsDetectorBind bind(wbImg);
     bind.run();
 #endif
