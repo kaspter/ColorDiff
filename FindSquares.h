@@ -21,6 +21,8 @@ typedef struct
 
 void findSquares( const Mat& image, vector<vector<Point> >& squares );
 
+void findRects( const Mat& image, vector<rectPointType>& Rects);
+
 void drawSquares( Mat& image, const vector<vector<Point> >& squares);
 
 void drawRects( Mat& image, vector<rectPointType>& vecRect);

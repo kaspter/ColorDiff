@@ -127,6 +127,14 @@ void findSquares( const Mat& image, vector<vector<Point> >& squares )
     }
 }
 
+
+void findRects( const Mat& image, vector<rectPointType>& Rects)
+{
+    vector<vector<Point> > squares;
+    findSquares(image, squares);
+    sortSquares(squares, Rects);
+}
+
 // the function draws all the squares in the image
 void drawSquares( Mat& image, const vector<vector<Point> >& squares )
 {
@@ -149,7 +157,7 @@ void drawRects( Mat& image, vector<rectPointType>& vecRect )
         printf("rect: (%d-%d-%d-%d)\n", rect.x, rect.y, rect.width, rect.height);
         //取正方形中心
         Point center(rect.x + rect.width/2, rect.y + rect.height/2);
-        circle(image, center, 1, Scalar(0, 255, 0), -1, 8, 0);
+        circle(image, center, 1, Scalar(0, 0, 255), -1, 8, 0);
     }
 }
 
