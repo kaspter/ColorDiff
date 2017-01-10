@@ -13,9 +13,7 @@ using namespace cv;
 using namespace std;
 
 const char* keys = { "{help h usage ? |         | print this message}"
-                     "{i              |         | input image name  }"
-                     "{a              |grayworld| color balance algorithm (simple, grayworld or learning_based)}"
-                     "{m              |         | path to the model for the learning-based algorithm (optional) }" };
+                     "{i              |         | input image name  }" };
 
 static const char* hcoName = "final CircleDetector";
 
@@ -296,17 +294,14 @@ int findMaxScore(Mat& image, vector<Vec3f>& ColorCircles, vector<Vec3f>& HchoCir
 int main(int argc, const char** argv)
 {
     CommandLineParser parser(argc, argv, keys);
-    parser.about("OpenCV color balance demonstration sample");
+    parser.about("OpenCV color diff sample");
     if (parser.has("help") || argc < 2) {
         parser.printMessage();
         return 0;
     }
 
     string inFilename    = parser.get<string>("i");
-    string algorithm     = parser.get<string>("a");
-    string modelFilename = parser.get<string>("m");
 
-#if 1
     if (!parser.check()) {
         parser.printErrors();
         return -1;
@@ -324,16 +319,9 @@ int main(int argc, const char** argv)
 
     Mat                        wbImg;
     Ptr<xphoto::WhiteBalancer> wb;
-    if (algorithm == "simple")
-        wb = xphoto::createSimpleWB();
-    else if (algorithm == "grayworld")
-        wb = xphoto::createGrayworldWB();
-    else if (algorithm == "learning_based")
-        wb = xphoto::createLearningBasedWB(modelFilename);
-    else {
-        printf("Unsupported algorithm: %s\n", algorithm.c_str());
-        return -1;
-    }
+    wb = xphoto::createSimpleWB();
+    //wb = xphoto::createGrayworldWB();
+    //wb = xphoto::createLearningBasedWB(modelFilename);
 
     //cvResize()，cvPyrDown(),cvPyrSegmentation()
     printf("col = %d\n", src.cols);
@@ -344,15 +332,7 @@ int main(int argc, const char** argv)
     }
 
     wb->balanceWhite(src, wbImg);
-#else
 
-    Mat wbImg = imread(inFilename, 1);
-    if (wbImg.empty()) {
-        printf("Cannot read image file: %s\n", inFilename.c_str());
-        return -1;
-    }
-    printf("col = %d\n", wbImg.cols);
-#endif
     //namedWindow("after color balance", 1);
     //imshow("after color balance", wbImg);
 
