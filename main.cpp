@@ -41,6 +41,7 @@ void onMouseMove(int event, int x, int y, int flags, void* ustc)
 
 #define MAX_HCHO_POINTS  52//甲醛取点个数
 #define MAX_COLOR_POINTS 32 //色卡取点个数
+#define MAX_CHECK_COUNTS 5 //检测次数
 
 //在点Center 附近scope 范围内的4个象县随机生成
 int genRandPoints(Point& Center, int scope, size_t num, vector<Vec3f>& oCircles)
@@ -80,21 +81,25 @@ int genRandPoints(Point& Center, int scope, size_t num, vector<Vec3f>& oCircles)
 }
 
 //色差相差最大的两个点
-int eraseRandPoints(Mat& image, vector<Vec3f>& oCircles)
+//TODO: 删除色差 > Delta的点
+int eraseRandPoints(Mat& image, vector<Vec3f>& iCircles, float Delta)
 {
+    int found = 0;
     float colorDelta = 0;
     int   iIndex     = -1;
     int   jIndex     = -1;
 
-    for (size_t i = 0; i < oCircles.size(); i++) {
+    for (size_t i = 0; i < iCircles.size(); i++) {
 
-        Point iCenter(cvRound(oCircles[i][0]), cvRound(oCircles[i][1]));
+        Point iCenter(cvRound(iCircles[i][0]), cvRound(iCircles[i][1]));
 
-        for (size_t j = 0; j < oCircles.size(); j++) {
+        for (size_t j = 0; j < iCircles.size(); j++) {
 
-            Point jCenter(cvRound(oCircles[j][0]), cvRound(oCircles[j][1]));
+            Point jCenter(cvRound(iCircles[j][0]), cvRound(iCircles[j][1]));
 
             float _delta = color_diff(image, iCenter, jCenter);
+
+            //printf("colorDelta=%.2f\n", _delta);
 
             if (_delta > colorDelta) {
                 colorDelta = _delta;
@@ -106,12 +111,12 @@ int eraseRandPoints(Mat& image, vector<Vec3f>& oCircles)
         }
     }
 
-    printf("size = %lu, max colorDelta=%f\n", oCircles.size(), colorDelta);
+    //printf("size = %lu, max colorDelta=%f\n", oCircles.size(), colorDelta);
 
-    vector<Vec3f>::iterator iIt = oCircles.begin() + iIndex;
-    vector<Vec3f>::iterator jIt = oCircles.begin() + jIndex;
-    oCircles.erase(iIt);
-    oCircles.erase(jIt);
+    vector<Vec3f>::iterator iIt = iCircles.begin() + iIndex;
+    vector<Vec3f>::iterator jIt = iCircles.begin() + jIndex;
+    iCircles.erase(iIt);
+    iCircles.erase(jIt);
     return 0;
 }
 
@@ -141,7 +146,7 @@ int calcCirclePoints(Mat& image, vector<Vec3f>& bCircles, vector<Vec3f>& lCircle
     }
 
     //排除色差相差最大的两个点
-    eraseRandPoints(image, oCircles);
+    eraseRandPoints(image, oCircles, 3.0);
 
     return 0;
 }
@@ -200,7 +205,7 @@ int calcColorPoints(Mat& image, vector<rectPointType>& vecRect, vector<Point>& P
             }
         }
 
-        printf("RectIdx %lu, max colorDelta=%f\n", i, colorDelta);
+        //printf("RectIdx %lu, max colorDelta=%f\n", i, colorDelta);
 
         vector<Vec3f>::iterator iIt = oCircles.begin() + iIndex;
         vector<Vec3f>::iterator jIt = oCircles.begin() + jIndex;
@@ -381,27 +386,41 @@ int main(int argc, const char** argv)
         CPoints.push_back(center);
     }
 
-    //色卡取点
+    vector<int> ColorPPM;
+
     vector<Vec3f> colorPoints;
-    calcColorPoints(LitImg, vecRect, CPoints, colorPoints);
-
-    //甲醛取点
     vector<Vec3f> hcoPoints;
-    calcCirclePoints(LitImg, bCircles, lCircles, hcoPoints);
-
-    //投票
     vector<WinColorScore> winScores;
-    findMaxScore(LitImg, colorPoints, hcoPoints, winScores);
 
-//显示结果
-    int blockIdx = ColorIndex[winScores.at(0).index];
+    for (int i = 0; i < MAX_CHECK_COUNTS; i++) {
+        //色卡取点
+        calcColorPoints(LitImg, vecRect, CPoints, colorPoints);
 
-    printf("===== finale winIndex = %d, ppm = %.2f, wins = %d\n", winScores.at(0).index, ColorHcho[winScores.at(0).index], winScores.at(0).wins);
+        //甲醛取点
+        calcCirclePoints(LitImg, bCircles, lCircles, hcoPoints);
 
-    Point block = vecHPoints.at(blockIdx);
-    circle(LitImg, block, 6, Scalar(0, 0, 255), -1, 8, 0);
+        //投票
+        findMaxScore(LitImg, colorPoints, hcoPoints, winScores);
 
-#if 1
+        //记录结果
+        printf("===== ColorIndex = %d, ppm = %.2f, wins = %d\n", winScores.at(0).index, ColorHcho[winScores.at(0).index], winScores.at(0).wins);
+        ColorPPM.push_back(winScores.at(0).index);
+    }
+
+    float ppm = 0.0;
+    for (size_t i = 0; i < ColorPPM.size(); i++) {
+        ppm += ColorHcho[ColorPPM[i]];
+        printf("===== finale ColorPPM = %.2f\n", ppm / (i + 1));
+    }
+
+#if 0
+    //标出选定色卡
+    for (size_t i = 0; i < ColorPPM.size(); i++) {
+        int blockIdx = ColorIndex[ColorPPM[i]];
+        Point block = vecHPoints.at(blockIdx);
+        circle(LitImg, block, 6, Scalar(0, 0, 255), -1, 8, 0);
+    }
+
     //标出所有巨型
     drawRects(LitImg, vecRect);
 
@@ -417,6 +436,7 @@ int main(int argc, const char** argv)
     }
 #endif
 
+#if 0
     namedWindow(hcoName, 1);
     setMouseCallback(hcoName, onMouseMove, &LitImg);
     imshow(hcoName, LitImg);
@@ -428,6 +448,7 @@ int main(int argc, const char** argv)
         // get user key
         key = waitKey(10);
     }
+#endif
 
 #else
     CircleDetector bigger(wbImg);
