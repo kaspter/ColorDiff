@@ -36,7 +36,7 @@ double angle( Point pt1, Point pt2, Point pt0 ) {
 }
 
 
-void findSquares( const Mat& image, vector<vector<Point> >& squares )
+void findSquares( const Mat& image, vector<vector<Point> >& squares, float minArea, float maxArea)
 {
     squares.clear();
 
@@ -102,7 +102,7 @@ void findSquares( const Mat& image, vector<vector<Point> >& squares )
                             area = fabs(contourArea(Mat(approx)));
                             //printf("area = %lg\n", area);
                             ////当正方形面积在此范围内……，如果有因面积过大或过小漏检正方形问题，调整此范围。
-                            if (14000.0 < area && area < 900000.0/*784000.0 /*443000.0*/) {
+                            if (minArea < area && area < maxArea) {
 
 
 
@@ -128,11 +128,13 @@ void findSquares( const Mat& image, vector<vector<Point> >& squares )
 }
 
 
-void findRects( const Mat& image, vector<rectPointType>& Rects)
+int findRects( const Mat& image, vector<rectPointType>& Rects)
 {
+    Rects.clear();
     vector<vector<Point> > squares;
-    findSquares(image, squares);
+    findSquares(image, squares, 5000.0, 90000.0);
     sortSquares(squares, Rects);
+    return Rects.size();
 }
 
 // the function draws all the squares in the image

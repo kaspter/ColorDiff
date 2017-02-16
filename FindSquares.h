@@ -19,9 +19,9 @@ typedef struct
 } rectPointType;
 
 
-void findSquares( const Mat& image, vector<vector<Point> >& squares );
+void findSquares( const Mat& image, vector<vector<Point> >& squares,float minArea, float maxArea);
 
-void findRects( const Mat& image, vector<rectPointType>& Rects);
+int findRects( const Mat& image, vector<rectPointType>& Rects);
 
 void drawSquares( Mat& image, const vector<vector<Point> >& squares);
 
