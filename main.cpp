@@ -412,7 +412,7 @@ static float hcho_main(string inFilename, Mat& out)
         ColorPPM.push_back(winScores.at(0).index);
     }
 
-#if 0
+#if 1
     //标出选定色卡
     for (size_t i = 0; i < ColorPPM.size(); i++) {
         int blockIdx = ColorIndex[ColorPPM[i]];
@@ -654,7 +654,7 @@ int main(int argc, const char** argv)
     float ppm = hcho_main(inFilename, out);
     printf("xxx ppm: %f\n",ppm);
     
-#if 0
+
     if (ppm > 0) {
         namedWindow(hcoName, 1);
         setMouseCallback(hcoName, onMouseMove, &out);
@@ -665,7 +665,6 @@ int main(int argc, const char** argv)
             key = waitKey(10);
         }
     }
-#endif
 
     return 0;
 #else
