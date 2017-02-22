@@ -12,13 +12,21 @@
 using namespace cv;
 using namespace std;
 
-const char* keys = { "{help h usage ? |         | print this message}"
-                     "{i              |         | input image name  }" };
+const char* keys = {"{help h usage ? |         | print this message}"
+                    "{i              |         | input image name  }"};
 
 static const char* hcoName = "final CircleDetector";
 
-void onMouseMove(int event, int x, int y, int flags, void* ustc)
-{
+
+static const int ColorIndex[26] = {3,   6,   7,   8,   9,   17,  18,  31,  42,  43,  54,  55,  110,
+                      112, 113, 124, 126, 127, 138, 175, 177, 178, 179, 188, 189, 193};
+
+static const float ColorHcho[26] = {0.35, 0.09, 0.02, 0.45, 0.13, 0.05, 0.18, 0.12, 0.25,
+                       0.06, 0.07, 0.19, 0.10, 0.30, 0.14, 0.16, 0.15, 0.03,
+                       0.11, 0.01, 0.08, 0.17, 0.04, 0.40, 0.20, 0.50};
+
+
+void onMouseMove(int event, int x, int y, int flags, void* ustc) {
     Mat& src = *(Mat*)ustc;
 
     (void)flags;
@@ -39,20 +47,20 @@ void onMouseMove(int event, int x, int y, int flags, void* ustc)
     }
 }
 
-#define MAX_HCHO_POINTS  52//甲醛取点个数
-#define MAX_COLOR_POINTS 32 //色卡取点个数
-#define MAX_CHECK_COUNTS 5 //检测次数
+#define MAX_HCHO_POINTS 52   //甲醛取点个数
+#define MAX_COLOR_POINTS 32  //色卡取点个数
+#define MAX_CHECK_COUNTS 5   //检测次数
+#define MAX_COLOR_NUM    26  //有效色卡数量
 
 //在点Center 附近scope 范围内的4个象县随机生成
-int genRandPoints(Point& Center, int scope, size_t num, vector<Vec3f>& oCircles)
-{
+int genRandPoints(Point& Center, int scope, size_t num, vector<Vec3f>& oCircles) {
     CvRNG rng;
     rng = cvRNG(cvGetTickCount());
 
     for (size_t i = 0; i < num; i++) {
         Vec3f Circle;
-        int   rand1 = cvRandInt(&rng) % scope; //如果%6出来的将会是0~5的正整数
-        int   rand2 = cvRandInt(&rng) % scope; //如果%6出来的将会是0~5的正整数
+        int rand1 = cvRandInt(&rng) % scope;  //如果%6出来的将会是0~5的正整数
+        int rand2 = cvRandInt(&rng) % scope;  //如果%6出来的将会是0~5的正整数
 
         int rand3 = i % 4;
 
@@ -73,7 +81,7 @@ int genRandPoints(Point& Center, int scope, size_t num, vector<Vec3f>& oCircles)
 
         Circle[2] = 0;
 
-        //printf("%d-%d-%d-%d-%d\n",cvRound(Circle[0]), cvRound(Circle[1]), rand1, rand2, rand3);
+        // printf("%d-%d-%d-%d-%d\n",cvRound(Circle[0]), cvRound(Circle[1]), rand1, rand2, rand3);
         oCircles.push_back(Circle);
     }
 
@@ -81,13 +89,12 @@ int genRandPoints(Point& Center, int scope, size_t num, vector<Vec3f>& oCircles)
 }
 
 //色差相差最大的两个点
-//TODO: 删除色差 > Delta的点
-int eraseRandPoints(Mat& image, vector<Vec3f>& iCircles, float Delta)
-{
+// TODO: 删除色差 > Delta的点
+int eraseRandPoints(Mat& image, vector<Vec3f>& iCircles, float Delta) {
     int found = 0;
     float colorDelta = 0;
-    int   iIndex     = -1;
-    int   jIndex     = -1;
+    int iIndex = -1;
+    int jIndex = -1;
 
     for (size_t i = 0; i < iCircles.size(); i++) {
 
@@ -99,35 +106,36 @@ int eraseRandPoints(Mat& image, vector<Vec3f>& iCircles, float Delta)
 
             float _delta = color_diff(image, iCenter, jCenter);
 
-            //printf("colorDelta=%.2f\n", _delta);
+            // printf("colorDelta=%.2f\n", _delta);
 
             if (_delta > colorDelta) {
                 colorDelta = _delta;
-                iIndex     = i;
-                jIndex     = j;
+                iIndex = i;
+                jIndex = j;
             } else {
-                //TODO
+                // TODO
             }
         }
     }
 
-    //printf("size = %lu, max colorDelta=%f\n", oCircles.size(), colorDelta);
-
-    vector<Vec3f>::iterator iIt = iCircles.begin() + iIndex;
-    vector<Vec3f>::iterator jIt = iCircles.begin() + jIndex;
-    iCircles.erase(iIt);
-    iCircles.erase(jIt);
+    // printf("size = %lu, max colorDelta=%f\n", oCircles.size(), colorDelta);
+    if (jIndex >= 0 && iIndex >= 0) {
+        vector<Vec3f>::iterator iIt = iCircles.begin() + iIndex;
+        vector<Vec3f>::iterator jIt = iCircles.begin() + jIndex;
+        iCircles.erase(iIt);
+        iCircles.erase(jIt);
+    }
     return 0;
 }
 
-int calcCirclePoints(Mat& image, vector<Vec3f>& bCircles, vector<Vec3f>& lCircles, vector<Vec3f>& oCircles)
-{
+int calcCirclePoints(Mat& image, vector<Vec3f>& bCircles, vector<Vec3f>& lCircles,
+                     vector<Vec3f>& oCircles) {
     size_t i, j;
 
     oCircles.clear();
 
     Point MaxCircleCenter(cvRound(bCircles[0][0]), cvRound(bCircles[0][1]));
-    int   MaxCircleRadius = cvRound(bCircles[0][2]);
+    int MaxCircleRadius = cvRound(bCircles[0][2]);
 
     //生成随即点
     genRandPoints(MaxCircleCenter, MaxCircleRadius * 2 / 5, MAX_HCHO_POINTS, oCircles);
@@ -136,12 +144,13 @@ int calcCirclePoints(Mat& image, vector<Vec3f>& bCircles, vector<Vec3f>& lCircle
     for (i = 0; i < lCircles.size(); i++) {
 
         Point iCenter(cvRound(lCircles[i][0]), cvRound(lCircles[i][1]));
-        int   CircleRadius = cvRound(lCircles[i][2]);
+        int CircleRadius = cvRound(lCircles[i][2]);
 
         for (j = 0; j < oCircles.size(); j++) {
             Point jCenter(cvRound(oCircles[j][0]), cvRound(oCircles[j][1]));
-            //TODO
-            int _delta = (iCenter.x - jCenter.x) * (iCenter.x - jCenter.x) + (iCenter.y - jCenter.y) * (iCenter.y - jCenter.y);
+            // TODO
+            int _delta = (iCenter.x - jCenter.x) * (iCenter.x - jCenter.x) +
+                         (iCenter.y - jCenter.y) * (iCenter.y - jCenter.y);
         }
     }
 
@@ -151,15 +160,15 @@ int calcCirclePoints(Mat& image, vector<Vec3f>& bCircles, vector<Vec3f>& lCircle
     return 0;
 }
 
-int calcColorPoints(Mat& image, vector<rectPointType>& vecRect, vector<Point>& Points, vector<Vec3f>& oCircles /*vector<vector<Point> >& colorPoints*/)
-{
+int calcColorPoints(Mat& image, vector<rectPointType>& vecRect, vector<Point>& Points,
+                    vector<Vec3f>& oCircles /*vector<vector<Point> >& colorPoints*/) {
     Rect maxRect;
 
     oCircles.clear();
 
     if (vecRect.size() > 0) {
         rectPointType rectPoint = vecRect.at(0);
-        maxRect                 = rectPoint.rect;
+        maxRect = rectPoint.rect;
     } else {
         return -1;
     }
@@ -168,7 +177,7 @@ int calcColorPoints(Mat& image, vector<rectPointType>& vecRect, vector<Point>& P
 
     for (size_t i = 0; i < Points.size(); i++) {
 
-        Vec3f         Circle;
+        Vec3f Circle;
         vector<Vec3f> cPoint;
 
         Point Center = Points.at(i);
@@ -178,8 +187,8 @@ int calcColorPoints(Mat& image, vector<rectPointType>& vecRect, vector<Point>& P
 
         //排除色差相差最大的两个点 TODO refactor
         float colorDelta = 0.0;
-        int   iIndex     = -1;
-        int   jIndex     = -1;
+        int iIndex = -1;
+        int jIndex = -1;
 
         size_t f = i * (MAX_COLOR_POINTS - 2);
 
@@ -191,73 +200,72 @@ int calcColorPoints(Mat& image, vector<rectPointType>& vecRect, vector<Point>& P
 
                 Point jCenter(cvRound(oCircles[h][0]), cvRound(oCircles[h][1]));
 
-                //printf("(%lu-%lu)-(%d-%d)-(%d-%d)\n", w, h, iCenter.x, iCenter.y,jCenter.x,jCenter.y);
+                // printf("(%lu-%lu)-(%d-%d)-(%d-%d)\n", w, h, iCenter.x,
+                // iCenter.y,jCenter.x,jCenter.y);
 
                 float _delta = color_diff(image, iCenter, jCenter);
-                //printf("=============== (%lu-%lu)-(%d-%d)-(%d-%d)-%.3f\n", w, h, iCenter.x, iCenter.y,jCenter.x,jCenter.y, _delta);
+                // printf("=============== (%lu-%lu)-(%d-%d)-(%d-%d)-%.3f\n", w, h, iCenter.x,
+                // iCenter.y,jCenter.x,jCenter.y, _delta);
                 if (_delta > colorDelta) {
                     colorDelta = _delta;
-                    iIndex     = w;
-                    jIndex     = h;
+                    iIndex = w;
+                    jIndex = h;
                 } else {
-                    //TODO
+                    // TODO
                 }
             }
         }
 
         //printf("RectIdx %lu, max colorDelta=%f\n", i, colorDelta);
-
-        vector<Vec3f>::iterator iIt = oCircles.begin() + iIndex;
-        vector<Vec3f>::iterator jIt = oCircles.begin() + jIndex;
-        oCircles.erase(iIt);
-        oCircles.erase(jIt);
+        if (jIndex >= 0 && iIndex >= 0) {
+            vector<Vec3f>::iterator iIt = oCircles.begin() + iIndex;
+            vector<Vec3f>::iterator jIt = oCircles.begin() + jIndex;
+            oCircles.erase(iIt);
+            oCircles.erase(jIt);
+        }
     }
 
     return 0;
 }
 
 typedef struct {
-    int   index;
+    int index;
     float delta;
 } DeltaColorScore;
 
 typedef struct {
     int index;
-    int wins; //得分最高的次数
+    int wins;  //得分最高的次数
 } WinColorScore;
 
 //根据delta 从小到大排序
-static bool sortDeltaScoreFun(const DeltaColorScore& c1, const DeltaColorScore& c2)
-{
+static bool sortDeltaScoreFun(const DeltaColorScore& c1, const DeltaColorScore& c2) {
     return (c1.delta < c2.delta);
 }
 
-void sortDeltaColorScore(vector<DeltaColorScore>& scores)
-{
+void sortDeltaColorScore(vector<DeltaColorScore>& scores) {
     if (scores.size() > 0)
         sort(scores.begin(), scores.end(), sortDeltaScoreFun);
 }
 
 //根据得分 从大到小排序
-static bool sortWinScoreFun(const WinColorScore& c1, const WinColorScore& c2)
-{
+static bool sortWinScoreFun(const WinColorScore& c1, const WinColorScore& c2) {
     return (c1.wins > c2.wins);
 }
 
-void sortWinColorScore(vector<WinColorScore>& scores)
-{
+void sortWinColorScore(vector<WinColorScore>& scores) {
     if (scores.size() > 0)
         sort(scores.begin(), scores.end(), sortWinScoreFun);
 }
 
-int findMaxScore(Mat& image, vector<Vec3f>& ColorCircles, vector<Vec3f>& HchoCircles, vector<WinColorScore>& winScores)
-{
+int findMaxScore(Mat& image, vector<Vec3f>& ColorCircles, vector<Vec3f>& HchoCircles,
+                 vector<WinColorScore>& winScores) {
     winScores.clear();
 
-    for (size_t i = 0; i < 26; i++) {
+    for (size_t i = 0; i < MAX_COLOR_NUM; i++) {
         WinColorScore wScores;
         wScores.index = i;
-        wScores.wins  = 0;
+        wScores.wins = 0;
         winScores.push_back(wScores);
     }
 
@@ -269,7 +277,7 @@ int findMaxScore(Mat& image, vector<Vec3f>& ColorCircles, vector<Vec3f>& HchoCir
 
         for (size_t z = 0; z < (MAX_COLOR_POINTS - 2); z++) {
 
-            for (size_t j = 0; j < 26; j++) {
+            for (size_t j = 0; j < MAX_COLOR_NUM; j++) {
 
                 DeltaColorScore iscore;
 
@@ -284,10 +292,10 @@ int findMaxScore(Mat& image, vector<Vec3f>& ColorCircles, vector<Vec3f>& HchoCir
 
             sortDeltaColorScore(deltaScores);
 
-            //printf("HCHO point index = %lu, winGroup = %d\n", i, deltaScores.at(0).index);
+            // printf("HCHO point index = %lu, winGroup = %d\n", i, deltaScores.at(0).index);
 
-            int            winIndex = deltaScores.at(0).index;
-            WinColorScore& wScore   = winScores.at(winIndex);
+            int winIndex = deltaScores.at(0).index;
+            WinColorScore& wScore = winScores.at(winIndex);
             wScore.wins++;
         }
     }
@@ -296,39 +304,19 @@ int findMaxScore(Mat& image, vector<Vec3f>& ColorCircles, vector<Vec3f>& HchoCir
     return 0;
 }
 
-int main(int argc, const char** argv)
+static float hcho_main(string inFilename, Mat& out)
 {
-    CommandLineParser parser(argc, argv, keys);
-    parser.about("OpenCV color diff sample");
-    if (parser.has("help") || argc < 2) {
-        parser.printMessage();
-        return 0;
-    }
-
-    string inFilename    = parser.get<string>("i");
-
-    if (!parser.check()) {
-        parser.printErrors();
-        return -1;
-    }
-
-
     Mat src = imread(inFilename, 1);
     if (src.empty()) {
         printf("Cannot read image file: %s\n", inFilename.c_str());
         return -1;
     }
 
-    //namedWindow("before color balance", 1);
-    //imshow("before color balance", src);
-
-    Mat                        wbImg;
+    Mat wbImg;
     Ptr<xphoto::WhiteBalancer> wb;
-    wb = xphoto::createSimpleWB();
-    //wb = xphoto::createGrayworldWB();
-    //wb = xphoto::createLearningBasedWB(modelFilename);
+    wb = xphoto::createSimpleWB(); //createGrayworldWB()/createLearningBasedWB(modelFilename);
 
-    //cvResize()，cvPyrDown(),cvPyrSegmentation()
+    // cvResize()，cvPyrDown(),cvPyrSegmentation()
     printf("col = %d\n", src.cols);
     while (src.cols > 1000) {
         Mat small;
@@ -338,79 +326,67 @@ int main(int argc, const char** argv)
 
     wb->balanceWhite(src, wbImg);
 
-    //namedWindow("after color balance", 1);
-    //imshow("after color balance", wbImg);
-
-    color_init();
-
-    int key;
     Mat BigImg;
     Mat LitImg;
 
-#if 1
-    vector<Vec3f>                        bCircles;
+    int ret;
+    vector<Vec3f> bCircles;
     struct EggsDetectorAlgorithmSettings mBigSettings(2, 103, 40, 20, 40, 98, 10, 148, 240);
-    int                                  ret;
     ret = findCircles(wbImg, bCircles, mBigSettings);
 
     printf("big = %d\n", ret);
     BigImg = drawCircles(wbImg, bCircles);
 
-    vector<Vec3f>                        lCircles;
+    vector<Vec3f> lCircles;
     struct EggsDetectorAlgorithmSettings mLitSettings(2, 103, 7, 20, 26, 35, 12, /*86*/ 87, 92);
     ret = findCircles(BigImg, lCircles, mLitSettings);
-
     printf("lit = %d\n", ret);
+
+    // fassthough if we do find little circles,
     LitImg = drawCircles(BigImg, lCircles);
 
     //识别矩形
-    vector<rectPointType>  vecRect;
-    findRects(wbImg, vecRect);
+    vector<rectPointType> vecRect;
+    ret = findRects(wbImg, vecRect);
+
+    printf("rects = %d\n", ret);
+    if (ret <= 0) {
+        return -1;
+    }
 
     //色卡定位
-    vector<Point> vecHPoints; //所有色块中心点
-    vector<Point> CPoints;    //有效色块中心点（26个）
-
-    int ColorIndex[26] = { 3, 6, 7, 8, 9, 17, 18, 31, 42, 43, 54, 55, 110,
-                           112, 113, 124, 126, 127, 138, 175, 177, 178, 179, 188, 189, 193 };
-
-    float ColorHcho[26] = { 0.35, 0.09, 0.02, 0.45, 0.13, 0.05, 0.18, 0.12, 0.25, 0.06, 0.07, 0.19, 0.10,
-                            0.30, 0.14, 0.16, 0.15, 0.03, 0.11, 0.01, 0.08, 0.17, 0.04, 0.40, 0.20, 0.50 };
+    vector<Point> vecHPoints;  //所有色块中心点
+    vector<Point> CPoints;     //有效色块中心点（26个）
 
     int num = findAllRectCenter(LitImg, vecRect, vecHPoints);
 
-    printf("num of rect %d\n", num);
-    for (int index = 0; index < 26 && index < num; index++) {
+    printf("num of rect center %d\n", num);
+    for (int index = 0; index < MAX_COLOR_NUM && index < num; index++) {
         Point center = vecHPoints.at(ColorIndex[index]);
-        //circle(LitImg, center, 1, Scalar(0, 255, 0), -1, 8, 0);
         CPoints.push_back(center);
     }
 
     vector<int> ColorPPM;
-
     vector<Vec3f> colorPoints;
     vector<Vec3f> hcoPoints;
     vector<WinColorScore> winScores;
 
     for (int i = 0; i < MAX_CHECK_COUNTS; i++) {
-        //色卡取点
-        calcColorPoints(LitImg, vecRect, CPoints, colorPoints);
 
+        //色卡取点
+        ret = calcColorPoints(LitImg, vecRect, CPoints, colorPoints);
+        if (ret != 0 ) {
+            printf("errorrrrrrrrrr...\n");
+        }
         //甲醛取点
-        calcCirclePoints(LitImg, bCircles, lCircles, hcoPoints);
+        ret = calcCirclePoints(LitImg, bCircles, lCircles, hcoPoints);
 
         //投票
-        findMaxScore(LitImg, colorPoints, hcoPoints, winScores);
+        ret = findMaxScore(LitImg, colorPoints, hcoPoints, winScores);
 
         //记录结果
         printf("===== ColorIndex = %d, ppm = %.2f, wins = %d\n", winScores.at(0).index, ColorHcho[winScores.at(0).index], winScores.at(0).wins);
         ColorPPM.push_back(winScores.at(0).index);
-    }
-
-    float ppm = 0.0;
-    for (size_t i = 0; i < ColorPPM.size(); i++) {
-        ppm += ColorHcho[ColorPPM[i]];
-        printf("===== finale ColorPPM = %.2f\n", ppm / (i + 1));
     }
 
 #if 0
@@ -429,6 +405,7 @@ int main(int argc, const char** argv)
         Point center(cvRound(colorPoints[i][0]), cvRound(colorPoints[i][1]));
         circle(LitImg, center, 1, Scalar(0, 255, 0), -1, 8, 0);
     }
+
     //标出甲醛取点
     for (size_t i = 0; i < hcoPoints.size(); i++) {
         Point center(cvRound(hcoPoints[i][0]), cvRound(hcoPoints[i][1]));
@@ -436,37 +413,51 @@ int main(int argc, const char** argv)
     }
 #endif
 
-#if 0
-    namedWindow(hcoName, 1);
-    setMouseCallback(hcoName, onMouseMove, &LitImg);
-    imshow(hcoName, LitImg);
 
-    //int
-    key = 0;
-
-    while (key != 'q' && key != 'Q') {
-        // get user key
-        key = waitKey(10);
+    float ppm = 0.0;
+    for (size_t i = 0; i < ColorPPM.size(); i++) {
+        ppm += ColorHcho[ColorPPM[i]];
+        printf("===== finale ColorPPM = %.2f\n", ppm / (i + 1));
     }
-#endif
 
-#else
-    CircleDetector bigger(wbImg);
-    //2,103,40,20,40,98,10,170,260
-    struct EggsDetectorAlgorithmSettings mBigSettings(2,103,40,20,40,98,10,148,240);
-    BigImg = bigger.findCircles(mBigSettings);
+    out = LitImg.clone();
+    return (ppm / MAX_CHECK_COUNTS);
+}
 
-    namedWindow("first CircleDetector", 1);
-    setMouseCallback("first CircleDetector", onMouseMove, &BigImg);
-    imshow("first CircleDetector", BigImg);
+int main(int argc, const char** argv) {
 
-    struct EggsDetectorAlgorithmSettings mSettings(2,103,7,20,26,35,12,/*86*/87,92);
+    CommandLineParser parser(argc, argv, keys);
 
-    CircleDetector smaller(BigImg);
-    LitImg = smaller.findCircles(mSettings);
+    parser.about("OpenCV color diff sample");
 
-    EggsDetectorBind bind(wbImg);
-    bind.run();
+    if (parser.has("help") || argc < 2) {
+        parser.printMessage();
+        return 0;
+    }
+
+    string inFilename = parser.get<string>("i");
+
+    if (!parser.check()) {
+        parser.printErrors();
+        return -1;
+    }
+
+    color_init();
+
+    Mat out;
+    float ppm = hcho_main(inFilename, out);
+
+#if 0
+    if (ppm > 0) {
+        namedWindow(hcoName, 1);
+        setMouseCallback(hcoName, onMouseMove, &out);
+        imshow(hcoName, out);
+
+        int key = 0;
+        while (key != 'q' && key != 'Q') {
+            key = waitKey(10);
+        }
+    }
 #endif
 
     return 0;

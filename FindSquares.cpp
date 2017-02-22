@@ -115,7 +115,7 @@ void findSquares( const Mat& image, vector<vector<Point> >& squares, float minAr
                                 }
 
 
-                                printf("find area = %lg\t%f\n", area, maxCosine);
+                                //printf("find area = %lg\t%f\n", area, maxCosine);
 
                                 //四个角和直角相比的最大误差，可根据实际情况略作调整，越小越严格
                                 if (maxCosine < 0.2)
@@ -133,6 +133,7 @@ int findRects( const Mat& image, vector<rectPointType>& Rects)
     Rects.clear();
     vector<vector<Point> > squares;
     findSquares(image, squares, 5000.0, 90000.0);
+    //TODO： 构造最大巨型
     sortSquares(squares, Rects);
     return Rects.size();
 }
