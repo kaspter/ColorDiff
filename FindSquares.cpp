@@ -115,7 +115,7 @@ void findSquares( const Mat& image, vector<vector<Point> >& squares, float minAr
                                 }
 
 
-                                //printf("find area = %lg\t%f\n", area, maxCosine);
+                                printf("find area = %lg\t%f\n", area, maxCosine);
 
                                 //四个角和直角相比的最大误差，可根据实际情况略作调整，越小越严格
                                 if (maxCosine < 0.2)
@@ -132,9 +132,11 @@ int findRects( const Mat& image, vector<rectPointType>& Rects)
 {
     Rects.clear();
     vector<vector<Point> > squares;
-    findSquares(image, squares, 5000.0, 90000.0);
-    //TODO： 构造最大巨型
+    findSquares(image, squares, 7500.0, 10000.0);
+
+    //构造最大巨型并排序
     sortSquares(squares, Rects);
+
     return Rects.size();
 }
 
@@ -246,17 +248,36 @@ bool sortFun(const rectPointType& r1, const rectPointType& r2)
 
 void sortSquares(vector<vector<Point> >& squares, vector<rectPointType>& vecRect)
 {
-    //取正方形中心
+
+    rectPointType MaxRectPoint;
+    vector<Point> points;
+
+    //将点转换成矩形
     for( size_t index = 0; index < squares.size(); index++ ) {
 
         Rect rect = boundingRect(Mat(squares[index]));
+
+        printf("XXXXXXXXX Rect: (%d-%d-%d-%d)\n", rect.x, rect.y, rect.width, rect.height);
+        Point pt1(cvRound(rect.x), cvRound(rect.y));
+        points.push_back(pt1);
+
+        Point pt2(cvRound(rect.x + rect.width), rect.y);
+        points.push_back(pt2);
+
+        Point pt3(rect.x, rect.y + rect.height);
+        points.push_back(pt3);
 
         rectPointType rectPoint;
         rectPoint.rect = rect;
         vecRect.push_back(rectPoint);
     }
 
+    //最大外包矩形
+    RotatedRect box = minAreaRect(Mat(points));
+    MaxRectPoint.rect = box.boundingRect();
+    vecRect.push_back(MaxRectPoint);
 
+    //计算正方形面积
     for (size_t i = 0; i < vecRect.size(); i++) {
         rectPointType now_rect = vecRect.at(i);
         int countInRange = 0;
