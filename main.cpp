@@ -459,42 +459,7 @@ static float hcho_main(string inFilename, Mat& out, int imgType)
         return -1;
     }
 
-
-#if 0
-    vector<int> ColorPPM;
-
-    vector<Vec3f>         colorPoints;
-    vector<Vec3f>         hcoPoints;
-    vector<WinColorScore> winScores;
-
-    for (int i = 0; i < MAX_CHECK_COUNTS; i++) {
-        //色卡取点
-        ret = calcColorPoints(LitImg, vecRect, CPoints, colorPoints);
-        if (ret != 0 ) {
-            printf("errorrrrrrrrrr...\n");
-        }
-        //甲醛取点
-        ret = calcCirclePoints(LitImg, bCircles, /*lCircles,*/ hcoPoints);
-
-        //投票
-        ret = findMaxScore(LitImg, colorPoints, hcoPoints, winScores);
-
-        //记录结果
-        printf("===== ColorIndex = %d, ppm = %.2f, wins = %d\n", winScores.at(0).index,
-               ColorHcho[winScores.at(0).index], winScores.at(0).wins);
-        ColorPPM.push_back(winScores.at(0).index);
-    }
-
-    float ppm = 0.0;
-    for (size_t i = 0; i < ColorPPM.size(); i++) {
-        ppm += ColorHcho[ColorPPM[i]];
-        printf("===== final ColorPPM = %.2f\n", ppm / (i + 1));
-    }
-
-    ppm = (ppm / MAX_CHECK_COUNTS);
-#else
     float ppm =  calcHchoPPM(src, vecRect, CPoints, bCircles, lCircles);
-#endif
 
 #if 0
     //标出选定色卡
