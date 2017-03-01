@@ -115,7 +115,7 @@ void findSquares( const Mat& image, vector<vector<Point> >& squares, float minAr
                                 }
 
 
-                                printf("find area = %lg\t%f\n", area, maxCosine);
+                                //printf("find area = %lg\t%f\n", area, maxCosine);
 
                                 //四个角和直角相比的最大误差，可根据实际情况略作调整，越小越严格
                                 if (maxCosine < 0.2)
@@ -128,31 +128,43 @@ void findSquares( const Mat& image, vector<vector<Point> >& squares, float minAr
 }
 
 
+static int findMaxRectAreaSize(vector<rectPointType>& Rects)
+{
+    if (Rects.size() > 0) {
+        rectPointType rectPoint = Rects.at(0);
+        Rect maxRect = rectPoint.rect;
+        return (maxRect.width * maxRect.height);
+    }
+    return 0;
+}
+
+
 int findRects( const Mat& image, vector<rectPointType>& Rects, int imgType)
 {
     Rects.clear();
     vector<vector<Point> > squares;
 
-    //自动拍照
-    if (imgType > 0) {
-        findSquares(image, squares, 7500.0, 10000.0);
-    } else {
-        //手动拍照
-        findSquares(image, squares, 14000.0, 900000.0);
+    //定位矩形
+    findSquares(image, squares, 7000.0, 900000.0);
+
+    //按面积排序
+    sortSquares(squares, Rects, 0);
+
+    //若最大面积过小，构造最大矩形
+    if (findMaxRectAreaSize(Rects) < 960 * 960 / 2) {
+        printf("11111 maxRect: area size failed, rebuilding...\n");
+        //构造最大巨型并排序
+        sortSquares(squares, Rects, 1);;
+    }
+
+    if (findMaxRectAreaSize(Rects) < 960 * 960 / 2) {
+        printf("2222 maxRect: area failed again\n");
+        return -1;
     }
 
     //构造最大巨型并排序
-    sortSquares(squares, Rects, imgType);
+   // sortSquares(squares, Rects, imgType);
 
-    //判定矩形面积
-    if (Rects.size() > 0) {
-        rectPointType rectPoint = Rects.at(0);
-        Rect maxRect = rectPoint.rect;
-        if (maxRect.width * maxRect.height < 960 * 960 / 2) {
-            printf("--------- maxRect: area failed\n");
-            return -1;
-        }
-    }
 
     return Rects.size();
 }
@@ -176,7 +188,7 @@ void drawRects( Mat& image, vector<rectPointType>& vecRect )
 
         rectangle(image,rect,Scalar(0,0,255),1,8,0);//用矩形画矩形窗
 
-        printf("rect: (%d-%d-%d-%d)\n", rect.x, rect.y, rect.width, rect.height);
+        //printf("rect: (%d-%d-%d-%d)\n", rect.x, rect.y, rect.width, rect.height);
         //取正方形中心
         Point center(rect.x + rect.width/2, rect.y + rect.height/2);
         circle(image, center, 1, Scalar(0, 0, 255), -1, 8, 0);
@@ -275,7 +287,7 @@ void sortSquares(vector<vector<Point> >& squares, vector<rectPointType>& vecRect
         Rect rect = boundingRect(Mat(squares[index]));
 
         if (imgType > 0) {
-            printf("XXXXXXXXX Rect: (%d-%d-%d-%d)\n", rect.x, rect.y, rect.width, rect.height);
+            //printf("XXXXXXXXX Rect: (%d-%d-%d-%d)\n", rect.x, rect.y, rect.width, rect.height);
             Point pt1(cvRound(rect.x), cvRound(rect.y));
             points.push_back(pt1);
 
