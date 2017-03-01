@@ -21,7 +21,7 @@ typedef struct
 
 void findSquares( const Mat& image, vector<vector<Point> >& squares,float minArea, float maxArea);
 
-int findRects( const Mat& image, vector<rectPointType>& Rects);
+int findRects( const Mat& image, vector<rectPointType>& Rects,int imgType);
 
 void drawSquares( Mat& image, const vector<vector<Point> >& squares);
 
@@ -31,7 +31,7 @@ void drawAllCenter( Mat& image, vector<rectPointType>& vecRect );
 
 void drawRectsCenter( Mat& image, rectPointType & rectPoint );
 
-void sortSquares(vector<vector<Point> >& squares, vector<rectPointType>& vecRect);
+void sortSquares(vector<vector<Point> >& squares, vector<rectPointType>& vecRect, int imgType);
 
 int findAllRectCenter( Mat& image, vector<rectPointType>& vecRect, vector<Point>& Points);
 

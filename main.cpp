@@ -323,17 +323,103 @@ int findMaxScore(Mat& image, vector<Vec3f>& ColorCircles, vector<Vec3f>& HchoCir
     return 0;
 }
 
-static float hcho_main(string inFilename, Mat& out)
+static int doWhiteBalance(const Mat& src, Mat& dst)
 {
+    Mat                        wbImg;
+    Ptr<xphoto::WhiteBalancer> wb;
+    wb = xphoto::createSimpleWB(); //createGrayworldWB()/createLearningBasedWB(modelFilename);
+
+    wb->balanceWhite(src, wbImg);
+    dst = wbImg.clone();
+
+    return 1;
+}
+
+static int checkAllCircles(const Mat& src, Mat& dst, vector<Vec3f>& bCircles, vector<Vec3f>& lCircles)
+{
+    int ret;
+    struct EggsDetectorAlgorithmSettings mBigSettings(2, 103, 40, 20, 40, 98, 10, 148, 240);
+    ret = findCircles(src, bCircles, mBigSettings);
+    printf("big = %d\n", ret);
+
+#if 0
+    Mat bImg = drawCircles(src, bCircles);
+
+    struct EggsDetectorAlgorithmSettings mLitSettings(2, 103, 7, 20, 26, 35, 12, /*86*/ 87, 92);
+    ret = findCircles(bImg, lCircles, mLitSettings);
+    printf("lit = %d\n", ret);
+    // fassthough if we do find small circles,
+    dst = drawCircles(bImg, lCircles);
+#else
+    dst = src.clone();
+#endif
+
+    return ret;
+}
+
+static int findValidRectCenter(Mat& src, vector<rectPointType>& vecRect, vector<Point>& CPoints)
+{
+    vector<Point> vecHPoints; //所有色块中心点
+    int num = findAllRectCenter(src, vecRect, vecHPoints);
+
+    printf("num of rect center %d\n", num);
+    for (int index = 0; index < 26 && index < num; index++) {
+        Point center = vecHPoints.at(ColorIndex[index]);
+        // circle(LitImg, center, 1, Scalar(0, 255, 0), -1, 8, 0);
+        CPoints.push_back(center);
+    }
+
+    return 1;
+}
+
+
+static float calcHchoPPM(Mat& src, vector<rectPointType>& vecRect, vector<Point>& CPoints,
+                          vector<Vec3f>& bCircles, vector<Vec3f>& lCircles)
+{
+    int ret;
+
+    vector<int> ColorPPM;
+
+    vector<Vec3f>         colorPoints;
+    vector<Vec3f>         hcoPoints;
+    vector<WinColorScore> winScores;
+
+    for (int i = 0; i < MAX_CHECK_COUNTS; i++) {
+        //色卡取点
+        ret = calcColorPoints(src, vecRect, CPoints, colorPoints);
+        if (ret != 0 ) {
+            printf("errorrrrrrrrrr...\n");
+        }
+        //甲醛取点
+        ret = calcCirclePoints(src, bCircles, /*lCircles,*/ hcoPoints);
+
+        //投票
+        ret = findMaxScore(src, colorPoints, hcoPoints, winScores);
+
+        //记录结果
+        printf("===== ColorIndex = %d, ppm = %.2f, wins = %d\n", winScores.at(0).index,
+               ColorHcho[winScores.at(0).index], winScores.at(0).wins);
+        ColorPPM.push_back(winScores.at(0).index);
+    }
+
+    float ppm = 0.0;
+    for (size_t i = 0; i < ColorPPM.size(); i++) {
+        ppm += ColorHcho[ColorPPM[i]];
+        printf("===== final ColorPPM = %.2f\n", ppm / (i + 1));
+    }
+
+    return (ppm / MAX_CHECK_COUNTS);
+}
+
+static float hcho_main(string inFilename, Mat& out, int imgType)
+{
+    int ret;
+
     Mat src = imread(inFilename, 1);
     if (src.empty()) {
         printf("Cannot read image file: %s\n", inFilename.c_str());
         return -1;
     }
-
-    Mat                        wbImg;
-    Ptr<xphoto::WhiteBalancer> wb;
-    wb = xphoto::createSimpleWB(); //createGrayworldWB()/createLearningBasedWB(modelFilename);
 
     // cvResize()，cvPyrDown(),cvPyrSegmentation()
     printf("col = %d\n", src.cols);
@@ -343,51 +429,38 @@ static float hcho_main(string inFilename, Mat& out)
         src = small;
     }
 
-    wb->balanceWhite(src, wbImg);
+    //白平衡
+    Mat wbImg;
+    ret = doWhiteBalance(src, wbImg);
 
-    int ret;
+    //识别圆形
+    Mat LitImg;
     vector<Vec3f>                        bCircles;
-    struct EggsDetectorAlgorithmSettings mBigSettings(2, 103, 40, 20, 40, 98, 10, 148, 240);
-    ret = findCircles(wbImg, bCircles, mBigSettings);
-    printf("big = %d\n", ret);
-
-#if 0
-    Mat BigImg = drawCircles(wbImg, bCircles);
-
     vector<Vec3f>                        lCircles;
-    struct EggsDetectorAlgorithmSettings mLitSettings(2, 103, 7, 20, 26, 35, 12, /*86*/ 87, 92);
-    ret = findCircles(BigImg, lCircles, mLitSettings);
-    printf("lit = %d\n", ret);
-    // fassthough if we do find little circles,
-    Mat LitImg = drawCircles(BigImg, lCircles);
-#else
-
-    Mat LitImg = wbImg.clone();
-#endif
-
-
-    //识别矩形
-    vector<rectPointType> vecRect;
-    ret = findRects(wbImg, vecRect);
-
-    printf("rects = %d\n", ret);
+    ret = checkAllCircles(wbImg, LitImg, bCircles, lCircles);
+    printf("circles ret = %d\n", ret);
     if (ret <= 0) {
         return -1;
     }
 
-    //色卡定位
-    vector<Point> vecHPoints; //所有色块中心点
-    vector<Point> CPoints;    //有效色块中心点（26个）
-
-    int num = findAllRectCenter(LitImg, vecRect, vecHPoints);
-
-    printf("num of rect center %d\n", num);
-    for (int index = 0; index < 26 && index < num; index++) {
-        Point center = vecHPoints.at(ColorIndex[index]);
-        // circle(LitImg, center, 1, Scalar(0, 255, 0), -1, 8, 0);
-        CPoints.push_back(center);
+    //识别最大矩形
+    vector<rectPointType> vecRect;
+    ret = findRects(wbImg, vecRect, imgType);
+    printf("rects ret = %d\n", ret);
+    if (ret <= 0) {
+        return -1;
     }
 
+    //色卡定位：定位每个有效色块中心点
+    vector<Point> CPoints;    //有效色块中心点（26个）
+    ret = findValidRectCenter(LitImg, vecRect, CPoints);
+    printf("vaild rect center ret = %d\n", ret);
+    if (ret <= 0) {
+        return -1;
+    }
+
+
+#if 0
     vector<int> ColorPPM;
 
     vector<Vec3f>         colorPoints;
@@ -412,7 +485,18 @@ static float hcho_main(string inFilename, Mat& out)
         ColorPPM.push_back(winScores.at(0).index);
     }
 
-#if 1
+    float ppm = 0.0;
+    for (size_t i = 0; i < ColorPPM.size(); i++) {
+        ppm += ColorHcho[ColorPPM[i]];
+        printf("===== final ColorPPM = %.2f\n", ppm / (i + 1));
+    }
+
+    ppm = (ppm / MAX_CHECK_COUNTS);
+#else
+    float ppm =  calcHchoPPM(src, vecRect, CPoints, bCircles, lCircles);
+#endif
+
+#if 0
     //标出选定色卡
     for (size_t i = 0; i < ColorPPM.size(); i++) {
         int blockIdx = ColorIndex[ColorPPM[i]];
@@ -435,14 +519,8 @@ static float hcho_main(string inFilename, Mat& out)
     }
 #endif
 
-    float ppm = 0.0;
-    for (size_t i = 0; i < ColorPPM.size(); i++) {
-        ppm += ColorHcho[ColorPPM[i]];
-        printf("===== final ColorPPM = %.2f\n", ppm / (i + 1));
-    }
-
     out = LitImg.clone();
-    return (ppm / MAX_CHECK_COUNTS);
+    return ppm;
 }
 
 // Maximum number of bytes allowed to be read from stdin
@@ -523,30 +601,27 @@ int php_url_decode(char* str, int len)
     return dest - str;
 }
 
-#ifdef USE_FCGI
-static long parseFilePath(FCGX_Request* request, char** content)
+static long parseFileProp(char* request, char** content, const char *start, const char *end)
 {
-    char* clenstr = FCGX_GetParam("REQUEST_URI", request->envp);
-
     unsigned long clen = STDIN_MAX;
 
-    if (clenstr) {
-        char* equal = strstr(clenstr, "fastcgi.cgi?path=");
-        char* dollr = strstr(equal, "&");
+    if (request) {
+        char* mstart = strstr(request, start);
+        char* mend = strstr(mstart, end);
 
-        if (!equal) {
+        if (!mstart) {
             return -1;
         }
 
-        if (!dollr) {
-            clen = strlen(equal);
+        if (!mend) {
+            clen = strlen(mstart);
         } else {
-            clen = dollr - equal - strlen("fastcgi.cgi?path=");
+            clen = mend - mstart - strlen(start);
         }
 
         *content = new char[clen + 1];
         memset(*content, 0, clen + 1);
-        memcpy(*content, equal + strlen("fastcgi.cgi?path="), clen);
+        memcpy(*content, mstart + strlen(start), clen);
 
     } else {
         // *never* read stdin when CONTENT_LENGTH is missing or unparsable
@@ -557,6 +632,7 @@ static long parseFilePath(FCGX_Request* request, char** content)
     return clen;
 }
 
+#ifdef USE_FCGI
 int fastcgi_main(int argc, const char** argv)
 {
 
@@ -587,8 +663,15 @@ int fastcgi_main(int argc, const char** argv)
         cerr.rdbuf(&cerr_fcgi_streambuf);
 
         //获取图片路径
-        char*         content;
-        unsigned long clen = parseFilePath(&request, &content);
+        char* request_uri = FCGX_GetParam("REQUEST_URI", request.envp);
+
+        char*         path;
+        char*         type;
+        unsigned long plen = parseFileProp(request_uri, &path, "path=", "&");
+
+        unsigned long tlen = parseFileProp(request_uri, &type, "type=", "&");
+
+        //unsigned long plen = parseFilePath(&request, &content);
 
         cout << "Content-type: text/html\r\n"
                 "\r\n"
@@ -599,24 +682,31 @@ int fastcgi_main(int argc, const char** argv)
                        "<H4>Request Number: "
              << ++count << "</H4>\n";
 
-        if (clen > 0) {
+        if (plen > 0 && tlen > 0) {
 
             //字符串转译
-            php_url_decode(content, clen);
+            php_url_decode(path, plen);
 
-            cout << "ImagePath: <H2>" << content << "</H2>\n";
+            cout << "ImagePath: <H2>" << path << "</H2>\n";
 
+            cout << "ImageType: <H3>" << atoi(type) << "</H3>\n";
             // string imgfile = "/srv/22b64d15-3183-423e-8813-961d921f6f1c.jpg";
-            string imgfile(content);
+            string imgfile(path);
 
             Mat out;
-            float ppm = hcho_main(imgfile, out);
+            float ppm = hcho_main(imgfile, out, atoi(type));
 
             cout << "ImagePPM:<span>" << ppm << "</span>\n";
+        } else {
+            cout << "ImagePath: <H2>-1</H2>\n";
+            cout << "ImageType: <H3>-1</H3>\n";
+            cout << "ImagePPM:<span>-1</span>\n";
         }
 
-        if (content)
-            delete[] content;
+        if (path)
+            delete[] path;
+        if (type)
+            delete[] type;
     }
 
     cin.rdbuf(cin_streambuf);
@@ -632,7 +722,7 @@ int main(int argc, const char** argv)
 
     color_init();
 
-#if 1
+#ifndef USE_FCGI
     CommandLineParser parser(argc, argv, keys);
 
     parser.about("OpenCV color diff sample");
@@ -651,7 +741,7 @@ int main(int argc, const char** argv)
 
     Mat out;
     printf("==================================\n");
-    float ppm = hcho_main(inFilename, out);
+    float ppm = hcho_main(inFilename, out, 0);
     printf("xxx ppm: %f\n",ppm);
     
 

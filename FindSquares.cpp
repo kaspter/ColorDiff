@@ -128,14 +128,21 @@ void findSquares( const Mat& image, vector<vector<Point> >& squares, float minAr
 }
 
 
-int findRects( const Mat& image, vector<rectPointType>& Rects)
+int findRects( const Mat& image, vector<rectPointType>& Rects, int imgType)
 {
     Rects.clear();
     vector<vector<Point> > squares;
-    findSquares(image, squares, 7500.0, 10000.0);
+
+    //自动拍照
+    if (imgType > 0) {
+        findSquares(image, squares, 7500.0, 10000.0);
+    } else {
+        //手动拍照
+        findSquares(image, squares, 14000.0, 900000.0);
+    }
 
     //构造最大巨型并排序
-    sortSquares(squares, Rects);
+    sortSquares(squares, Rects, imgType);
 
     return Rects.size();
 }
@@ -246,7 +253,7 @@ bool sortFun(const rectPointType& r1, const rectPointType& r2)
 }
 
 
-void sortSquares(vector<vector<Point> >& squares, vector<rectPointType>& vecRect)
+void sortSquares(vector<vector<Point> >& squares, vector<rectPointType>& vecRect, int imgType)
 {
 
     rectPointType MaxRectPoint;
@@ -257,15 +264,17 @@ void sortSquares(vector<vector<Point> >& squares, vector<rectPointType>& vecRect
 
         Rect rect = boundingRect(Mat(squares[index]));
 
-        printf("XXXXXXXXX Rect: (%d-%d-%d-%d)\n", rect.x, rect.y, rect.width, rect.height);
-        Point pt1(cvRound(rect.x), cvRound(rect.y));
-        points.push_back(pt1);
+        if (imgType > 0) {
+            printf("XXXXXXXXX Rect: (%d-%d-%d-%d)\n", rect.x, rect.y, rect.width, rect.height);
+            Point pt1(cvRound(rect.x), cvRound(rect.y));
+            points.push_back(pt1);
 
-        Point pt2(cvRound(rect.x + rect.width), rect.y);
-        points.push_back(pt2);
+            Point pt2(cvRound(rect.x + rect.width), rect.y);
+            points.push_back(pt2);
 
-        Point pt3(rect.x, rect.y + rect.height);
-        points.push_back(pt3);
+            Point pt3(rect.x, rect.y + rect.height);
+            points.push_back(pt3);
+        }
 
         rectPointType rectPoint;
         rectPoint.rect = rect;
@@ -273,9 +282,11 @@ void sortSquares(vector<vector<Point> >& squares, vector<rectPointType>& vecRect
     }
 
     //最大外包矩形
-    RotatedRect box = minAreaRect(Mat(points));
-    MaxRectPoint.rect = box.boundingRect();
-    vecRect.push_back(MaxRectPoint);
+    if (imgType > 0) {
+        RotatedRect box = minAreaRect(Mat(points));
+        MaxRectPoint.rect = box.boundingRect();
+        vecRect.push_back(MaxRectPoint);
+    }
 
     //计算正方形面积
     for (size_t i = 0; i < vecRect.size(); i++) {
