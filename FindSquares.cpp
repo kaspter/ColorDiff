@@ -144,6 +144,16 @@ int findRects( const Mat& image, vector<rectPointType>& Rects, int imgType)
     //构造最大巨型并排序
     sortSquares(squares, Rects, imgType);
 
+    //判定矩形面积
+    if (Rects.size() > 0) {
+        rectPointType rectPoint = Rects.at(0);
+        Rect maxRect = rectPoint.rect;
+        if (maxRect.width * maxRect.height < 960 * 960 / 2) {
+            printf("--------- maxRect: area failed\n");
+            return -1;
+        }
+    }
+
     return Rects.size();
 }
 
