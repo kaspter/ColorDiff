@@ -335,6 +335,7 @@ static int doWhiteBalance(const Mat& src, Mat& dst)
     return 1;
 }
 
+
 static int checkAllCircles(const Mat& src, Mat& dst, vector<Vec3f>& bCircles, vector<Vec3f>& lCircles)
 {
     int ret;
@@ -342,16 +343,25 @@ static int checkAllCircles(const Mat& src, Mat& dst, vector<Vec3f>& bCircles, ve
     ret = findCircles(src, bCircles, mBigSettings);
     printf("big = %d\n", ret);
 
-#if 0
+#ifdef USE_LITTLE
+    struct EggsDetectorAlgorithmSettings mLitSettings(2, 103, 7, 20, 26, 35, 12, /*86*/ 87, 92);
+    ret = findCircles(src, lCircles, mLitSettings);
+    printf("lit = %d\n", ret);
+#endif
+
+
+
+#ifdef USE_FCGI
+    dst = src.clone();
+#else
     Mat bImg = drawCircles(src, bCircles);
 
-    struct EggsDetectorAlgorithmSettings mLitSettings(2, 103, 7, 20, 26, 35, 12, /*86*/ 87, 92);
-    ret = findCircles(bImg, lCircles, mLitSettings);
-    printf("lit = %d\n", ret);
-    // fassthough if we do find small circles,
+#ifdef USE_LITTLE
     dst = drawCircles(bImg, lCircles);
 #else
-    dst = src.clone();
+    dst = bImg.clone();
+#endif
+
 #endif
 
     return ret;
@@ -397,10 +407,23 @@ static float calcHchoPPM(Mat& src, vector<rectPointType>& vecRect, vector<Point>
         ret = findMaxScore(src, colorPoints, hcoPoints, winScores);
 
         //记录结果
-        printf("===== ColorIndex = %d, ppm = %.2f, wins = %d\n", winScores.at(0).index,
-               ColorHcho[winScores.at(0).index], winScores.at(0).wins);
         ColorPPM.push_back(winScores.at(0).index);
+
+        printf("===== ColorIndex = %d, ppm = %.2f, wins = %d\n", winScores.at(0).index, ColorHcho[winScores.at(0).index], winScores.at(0).wins);
     }
+
+
+#ifndef USE_FCGI
+    vector<Point> vecHPoints; //所有色块中心点
+    int num = findAllRectCenter(src, vecRect, vecHPoints);
+
+    //标出选定色卡
+    for (size_t i = 0; i < ColorPPM.size(); i++) {
+        int blockIdx = ColorIndex[ColorPPM[i]];
+        Point block = vecHPoints.at(blockIdx);
+        circle(src, block, 6, Scalar(0, 0, 255), -1, 8, 0);
+    }
+#endif
 
     float ppm = 0.0;
     for (size_t i = 0; i < ColorPPM.size(); i++) {
@@ -434,10 +457,10 @@ static float hcho_main(string inFilename, Mat& out, int imgType)
     ret = doWhiteBalance(src, wbImg);
 
     //识别圆形
-    Mat LitImg;
+    Mat outImg;
     vector<Vec3f>                        bCircles;
     vector<Vec3f>                        lCircles;
-    ret = checkAllCircles(wbImg, LitImg, bCircles, lCircles);
+    ret = checkAllCircles(wbImg, outImg, bCircles, lCircles);
     printf("circles ret = %d\n", ret);
     if (ret <= 0) {
         return -1;
@@ -451,32 +474,28 @@ static float hcho_main(string inFilename, Mat& out, int imgType)
         return -1;
     }
 
+#ifndef USE_FCGI
+    //标出所有巨型
+    drawRects(outImg, vecRect);
+#endif
+
     //色卡定位：定位每个有效色块中心点
     vector<Point> CPoints;    //有效色块中心点（26个）
-    ret = findValidRectCenter(LitImg, vecRect, CPoints);
+    ret = findValidRectCenter(outImg, vecRect, CPoints);
     printf("vaild rect center ret = %d\n", ret);
     if (ret <= 0) {
         return -1;
     }
 
-    float ppm =  calcHchoPPM(src, vecRect, CPoints, bCircles, lCircles);
+    float ppm =  calcHchoPPM(outImg, vecRect, CPoints, bCircles, lCircles);
 
 #if 0
-    //标出选定色卡
-    for (size_t i = 0; i < ColorPPM.size(); i++) {
-        int blockIdx = ColorIndex[ColorPPM[i]];
-        Point block = vecHPoints.at(blockIdx);
-        circle(LitImg, block, 6, Scalar(0, 0, 255), -1, 8, 0);
-    }
-
-    //标出所有巨型
-    drawRects(LitImg, vecRect);
-
     //标出色卡取点
     for (size_t i = 0; i < colorPoints.size(); i++) {
         Point center(cvRound(colorPoints[i][0]), cvRound(colorPoints[i][1]));
         circle(LitImg, center, 1, Scalar(0, 255, 0), -1, 8, 0);
     }
+
     //标出甲醛取点
     for (size_t i = 0; i < hcoPoints.size(); i++) {
         Point center(cvRound(hcoPoints[i][0]), cvRound(hcoPoints[i][1]));
@@ -484,7 +503,7 @@ static float hcho_main(string inFilename, Mat& out, int imgType)
     }
 #endif
 
-    out = LitImg.clone();
+    out = outImg.clone();
     return ppm;
 }
 
@@ -687,7 +706,9 @@ int main(int argc, const char** argv)
 
     color_init();
 
-#ifndef USE_FCGI
+#ifdef USE_FCGI
+    return fastcgi_main(argc,argv);
+#else
     CommandLineParser parser(argc, argv, keys);
 
     parser.about("OpenCV color diff sample");
@@ -722,7 +743,5 @@ int main(int argc, const char** argv)
     }
 
     return 0;
-#else
-    return fastcgi_main(argc,argv);
 #endif
 }
