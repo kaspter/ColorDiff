@@ -489,20 +489,6 @@ static float hcho_main(string inFilename, Mat& out, int imgType)
 
     float ppm =  calcHchoPPM(outImg, vecRect, CPoints, bCircles, lCircles);
 
-#if 0
-    //标出色卡取点
-    for (size_t i = 0; i < colorPoints.size(); i++) {
-        Point center(cvRound(colorPoints[i][0]), cvRound(colorPoints[i][1]));
-        circle(LitImg, center, 1, Scalar(0, 255, 0), -1, 8, 0);
-    }
-
-    //标出甲醛取点
-    for (size_t i = 0; i < hcoPoints.size(); i++) {
-        Point center(cvRound(hcoPoints[i][0]), cvRound(hcoPoints[i][1]));
-        circle(LitImg, center, 1, Scalar(0, 255, 0), -1, 8, 0);
-    }
-#endif
-
     out = outImg.clone();
     return ppm;
 }
