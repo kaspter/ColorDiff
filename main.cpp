@@ -463,7 +463,7 @@ static float hcho_main(string inFilename, Mat& out, int imgType)
     ret = checkAllCircles(wbImg, outImg, bCircles, lCircles);
     printf("circles ret = %d\n", ret);
     if (ret <= 0) {
-        return -1;
+        return -2;
     }
 
     //识别最大矩形
@@ -471,7 +471,7 @@ static float hcho_main(string inFilename, Mat& out, int imgType)
     ret = findRects(wbImg, vecRect, imgType);
     printf("rects ret = %d\n", ret);
     if (ret <= 0) {
-        return -1;
+        return -3;
     }
 
 #ifndef USE_FCGI
@@ -484,7 +484,7 @@ static float hcho_main(string inFilename, Mat& out, int imgType)
     ret = findValidRectCenter(outImg, vecRect, CPoints);
     printf("vaild rect center ret = %d\n", ret);
     if (ret <= 0) {
-        return -1;
+        return -4;
     }
 
     float ppm =  calcHchoPPM(outImg, vecRect, CPoints, bCircles, lCircles);
