@@ -47,13 +47,13 @@ void onMouseMove(int event, int x, int y, int flags, void* ustc)
     color_pick(src, x, y);
 
     switch (event) {
-    case CV_EVENT_LBUTTONDOWN:
+    case EVENT_LBUTTONDOWN:
         color_pick_left(src, x, y);
         imshow(hcoName, src);
         break;
-    case CV_EVENT_LBUTTONUP:
+    case EVENT_LBUTTONUP:
         break;
-    case CV_EVENT_RBUTTONDOWN:
+    case EVENT_RBUTTONDOWN:
         color_pick_right(src, x, y);
         imshow(hcoName, src);
         break;
