@@ -34,16 +34,13 @@ struct EggsDetectorAlgorithmSettings {
     {
     }
 
-    EggsDetectorAlgorithmSettings(int spatialWindowRadius,
-                                  int colorWindowRadius,
+    EggsDetectorAlgorithmSettings(int spatialWindowRadius, int colorWindowRadius,
                                   int sharpeningWeigh, // x100
                                   int laplaccianScale, // x100
-                                  int cannyThreshold,
-                                  int accumulatorThreshold,
+                                  int cannyThreshold, int accumulatorThreshold,
 
                                   int houghResolution, // x10
-                                  int minRadius,
-                                  int maxRadius)
+                                  int minRadius, int maxRadius)
         : mSpatialWindowRadius(spatialWindowRadius)
         , mColorWindowRadius(colorWindowRadius)
         , mSharpeningWeight(sharpeningWeigh)
@@ -57,9 +54,10 @@ struct EggsDetectorAlgorithmSettings {
     }
 };
 
-class EggsDetectorAlgorithm {
+class EggsDetectorAlgorithm
+{
 public:
-    void process(const Mat_<Vec3b>& inputRgbImage, const EggsDetectorAlgorithmSettings& settings)
+    void process(const Mat_<Vec3b> &inputRgbImage, const EggsDetectorAlgorithmSettings &settings)
     {
         //Step 1 - Filter image
         pyrMeanShiftFiltering(inputRgbImage, filtered, settings.mSpatialWindowRadius, settings.mColorWindowRadius, 1);
@@ -75,18 +73,14 @@ public:
         Laplacian(blurredf, laplaccian, CV_32F);
 
         float weight = 0.01f * settings.mSharpeningWeight;
-        float scale  = 0.01f * settings.mLaplaccianScale;
+        float scale = 0.01f * settings.mLaplaccianScale;
 
-        Mat_<float> sharpenedf = 1.5f * grayImgf
-            - 0.5f * blurredf
-            - weight * grayImgf.mul(scale * laplaccian);
+        Mat_<float> sharpenedf = 1.5f * grayImgf - 0.5f * blurredf - weight * grayImgf.mul(scale * laplaccian);
 
         sharpenedf.convertTo(sharpened, CV_8U);
 
         // Step 6 - Detect circles
-        HoughCircles(sharpened,
-                     circles,
-                     CV_HOUGH_GRADIENT,
+        HoughCircles(sharpened, circles, CV_HOUGH_GRADIENT,
                      0.1f * settings.mHoughResolution, //
                      settings.mMinRadius,              //两个圆之间的最小距离，
                      settings.mCannyThreshold,         //
@@ -100,13 +94,13 @@ public:
         //
     }
 
-    Mat display(const Mat& colorImg) const
+    Mat display(const Mat &colorImg) const
     {
         // clone the colour, input image for displaying purposes
         Mat display = colorImg.clone();
         for (size_t i = 0; i < circles.size(); i++) {
             Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
-            int   radius = cvRound(circles[i][2]);
+            int radius = cvRound(circles[i][2]);
 
             //color_pick(display, cvRound(circles[i][0]),cvRound(circles[i][1]));
 
@@ -121,24 +115,25 @@ public:
     }
 
 private:
-    Mat         filtered;
-    Mat         grayImg;
-    Mat         grayImgf;
+    Mat filtered;
+    Mat grayImg;
+    Mat grayImgf;
     Mat_<float> blurredf;
     Mat_<float> laplaccian;
-    Mat         sharpened;
+    Mat sharpened;
 
     std::vector<Vec3f> circles;
 };
 
-class CircleDetector {
+class CircleDetector
+{
 public:
-    CircleDetector(const Mat_<Vec3b>& inputRgbImage)
+    CircleDetector(const Mat_<Vec3b> &inputRgbImage)
         : mImage(inputRgbImage)
     {
     }
 
-    Mat findCircles(const EggsDetectorAlgorithmSettings& settings)
+    Mat findCircles(const EggsDetectorAlgorithmSettings &settings)
     {
 
         mAlgorithm.process(mImage, settings);
@@ -146,33 +141,35 @@ public:
     }
 
 private:
-    Mat                   mImage;
+    Mat mImage;
     EggsDetectorAlgorithm mAlgorithm;
 };
 
-class EggsDetectorBind {
+class EggsDetectorBind
+{
 public:
-    EggsDetectorBind(const Mat_<Vec3b>& inputRgbImage);
+    EggsDetectorBind(const Mat_<Vec3b> &inputRgbImage);
 
     void run();
 
 protected:
     void display();
 
-    static void trackbarPropertyChanged(int, void* userdata)
+    static void trackbarPropertyChanged(int, void *userdata)
     {
-        EggsDetectorBind* self = (EggsDetectorBind*)userdata;
+        EggsDetectorBind *self = (EggsDetectorBind *)userdata;
         self->display();
     }
 
 private:
-    Mat                           mImage;
+    Mat mImage;
     EggsDetectorAlgorithmSettings mSettings;
-    EggsDetectorAlgorithm         mAlgorithm;
+    EggsDetectorAlgorithm mAlgorithm;
 };
 
-int findCircles(const Mat_<Vec3b>& inputRgbImage, vector<Vec3f>& circles, const EggsDetectorAlgorithmSettings& settings);
-Mat drawCircles(const Mat& colorImg, vector<Vec3f>& circles);
-void sortCircles(vector<Vec3f>& circles);
+int findCircles(const Mat_<Vec3b> &inputRgbImage, vector<Vec3f> &circles,
+                const EggsDetectorAlgorithmSettings &settings);
+Mat drawCircles(const Mat &colorImg, vector<Vec3f> &circles);
+void sortCircles(vector<Vec3f> &circles);
 
 #endif /* GPICK_COLOR_H_ */

@@ -15,7 +15,7 @@
 //#define USE_FCGI 1
 
 #ifdef USE_FCGI
-extern char** environ;
+extern char **environ;
 
 #include "fcgi_config.h"
 #include "fcgio.h"
@@ -25,22 +25,20 @@ extern char** environ;
 using namespace cv;
 using namespace std;
 
-const char* keys = { "{help h usage ? |         | print this message}"
+const char *keys = { "{help h usage ? |         | print this message}"
                      "{i              |         | input image name  }" };
 
-static const char* hcoName = "final CircleDetector";
+static const char *hcoName = "final CircleDetector";
 
-static const int ColorIndex[26] = {3,   6,   7,   8,   9,   17,  18,  31,  42,  43,  54,  55,  110,
-                      112, 113, 124, 126, 127, 138, 175, 177, 178, 179, 188, 189, 193};
+static const int ColorIndex[26] = { 3,   6,   7,   8,   9,   17,  18,  31,  42,  43,  54,  55,  110,
+                                    112, 113, 124, 126, 127, 138, 175, 177, 178, 179, 188, 189, 193 };
 
-static const float ColorHcho[26] = {0.35, 0.09, 0.02, 0.45, 0.13, 0.05, 0.18, 0.12, 0.25,
-                       0.06, 0.07, 0.19, 0.10, 0.30, 0.14, 0.16, 0.15, 0.03,
-                       0.11, 0.01, 0.08, 0.17, 0.04, 0.40, 0.20, 0.50};
+static const float ColorHcho[26] = { 0.35, 0.09, 0.02, 0.45, 0.13, 0.05, 0.18, 0.12, 0.25, 0.06, 0.07, 0.19, 0.10,
+                                     0.30, 0.14, 0.16, 0.15, 0.03, 0.11, 0.01, 0.08, 0.17, 0.04, 0.40, 0.20, 0.50 };
 
-
-void onMouseMove(int event, int x, int y, int flags, void* ustc)
+void onMouseMove(int event, int x, int y, int flags, void *ustc)
 {
-    Mat& src = *(Mat*)ustc;
+    Mat &src = *(Mat *)ustc;
 
     (void)flags;
 
@@ -65,15 +63,15 @@ void onMouseMove(int event, int x, int y, int flags, void* ustc)
 #define MAX_CHECK_COUNTS 5  //检测次数
 
 //在点Center 附近scope 范围内的4个象县随机生成
-int genRandPoints(Point& Center, int scope, size_t num, vector<Vec3f>& oCircles)
+int genRandPoints(Point &Center, int scope, size_t num, vector<Vec3f> &oCircles)
 {
     CvRNG rng;
     rng = cvRNG(cvGetTickCount());
 
     for (size_t i = 0; i < num; i++) {
         Vec3f Circle;
-        int   rand1 = cvRandInt(&rng) % scope; //如果%6出来的将会是0~5的正整数
-        int   rand2 = cvRandInt(&rng) % scope; //如果%6出来的将会是0~5的正整数
+        int rand1 = cvRandInt(&rng) % scope; //如果%6出来的将会是0~5的正整数
+        int rand2 = cvRandInt(&rng) % scope; //如果%6出来的将会是0~5的正整数
 
         int rand3 = i % 4;
 
@@ -103,11 +101,11 @@ int genRandPoints(Point& Center, int scope, size_t num, vector<Vec3f>& oCircles)
 
 //色差相差最大的两个点
 // TODO: 删除色差 > Delta的点
-int eraseRandPoints(Mat& image, vector<Vec3f>& iCircles, float Delta)
+int eraseRandPoints(Mat &image, vector<Vec3f> &iCircles, float Delta)
 {
     float colorDelta = 0;
-    int   iIndex     = -1;
-    int   jIndex     = -1;
+    int iIndex = -1;
+    int jIndex = -1;
 
     for (size_t i = 0; i < iCircles.size(); i++) {
 
@@ -123,8 +121,8 @@ int eraseRandPoints(Mat& image, vector<Vec3f>& iCircles, float Delta)
 
             if (_delta > colorDelta) {
                 colorDelta = _delta;
-                iIndex     = i;
-                jIndex     = j;
+                iIndex = i;
+                jIndex = j;
             } else {
                 // TODO
             }
@@ -141,18 +139,18 @@ int eraseRandPoints(Mat& image, vector<Vec3f>& iCircles, float Delta)
     return 0;
 }
 
-int calcCirclePoints(Mat& image, vector<Vec3f>& bCircles,/* vector<Vec3f>& lCircles,*/
-                     vector<Vec3f>& oCircles)
+int calcCirclePoints(Mat &image, vector<Vec3f> &bCircles, /* vector<Vec3f>& lCircles,*/
+                     vector<Vec3f> &oCircles)
 {
     oCircles.clear();
 
     Point MaxCircleCenter(cvRound(bCircles[0][0]), cvRound(bCircles[0][1]));
-    int   MaxCircleRadius = cvRound(bCircles[0][2]);
+    int MaxCircleRadius = cvRound(bCircles[0][2]);
 
     //生成随即点
     genRandPoints(MaxCircleCenter, MaxCircleRadius * 2 / 5, MAX_HCHO_POINTS, oCircles);
 
-    //TODO: 排除在小圆内的点,不足MAX_HCHO_POINTS个点重新取点
+//TODO: 排除在小圆内的点,不足MAX_HCHO_POINTS个点重新取点
 #if 0
     for (size_t i = 0; i < lCircles.size(); i++) {
 
@@ -173,8 +171,8 @@ int calcCirclePoints(Mat& image, vector<Vec3f>& bCircles,/* vector<Vec3f>& lCirc
     return 0;
 }
 
-int calcColorPoints(Mat& image, vector<rectPointType>& vecRect, vector<Point>& Points,
-                    vector<Vec3f>& oCircles /*vector<vector<Point> >& colorPoints*/)
+int calcColorPoints(Mat &image, vector<rectPointType> &vecRect, vector<Point> &Points,
+                    vector<Vec3f> &oCircles /*vector<vector<Point> >& colorPoints*/)
 {
     Rect maxRect;
 
@@ -182,7 +180,7 @@ int calcColorPoints(Mat& image, vector<rectPointType>& vecRect, vector<Point>& P
 
     if (vecRect.size() > 0) {
         rectPointType rectPoint = vecRect.at(0);
-        maxRect                 = rectPoint.rect;
+        maxRect = rectPoint.rect;
     } else {
         return -1;
     }
@@ -191,7 +189,7 @@ int calcColorPoints(Mat& image, vector<rectPointType>& vecRect, vector<Point>& P
 
     for (size_t i = 0; i < Points.size(); i++) {
 
-        Vec3f         Circle;
+        Vec3f Circle;
         vector<Vec3f> cPoint;
 
         Point Center = Points.at(i);
@@ -201,8 +199,8 @@ int calcColorPoints(Mat& image, vector<rectPointType>& vecRect, vector<Point>& P
 
         //排除色差相差最大的两个点 TODO refactor
         float colorDelta = 0.0;
-        int   iIndex     = -1;
-        int   jIndex     = -1;
+        int iIndex = -1;
+        int jIndex = -1;
 
         size_t f = i * (MAX_COLOR_POINTS - 2);
 
@@ -222,8 +220,8 @@ int calcColorPoints(Mat& image, vector<rectPointType>& vecRect, vector<Point>& P
                 // iCenter.y,jCenter.x,jCenter.y, _delta);
                 if (_delta > colorDelta) {
                     colorDelta = _delta;
-                    iIndex     = w;
-                    jIndex     = h;
+                    iIndex = w;
+                    jIndex = h;
                 } else {
                     // TODO
                 }
@@ -243,7 +241,7 @@ int calcColorPoints(Mat& image, vector<rectPointType>& vecRect, vector<Point>& P
 }
 
 typedef struct {
-    int   index;
+    int index;
     float delta;
 } DeltaColorScore;
 
@@ -253,38 +251,37 @@ typedef struct {
 } WinColorScore;
 
 //根据delta 从小到大排序
-static bool sortDeltaScoreFun(const DeltaColorScore& c1, const DeltaColorScore& c2)
+static bool sortDeltaScoreFun(const DeltaColorScore &c1, const DeltaColorScore &c2)
 {
     return (c1.delta < c2.delta);
 }
 
-void sortDeltaColorScore(vector<DeltaColorScore>& scores)
+void sortDeltaColorScore(vector<DeltaColorScore> &scores)
 {
     if (scores.size() > 0)
         sort(scores.begin(), scores.end(), sortDeltaScoreFun);
 }
 
 //根据得分 从大到小排序
-static bool sortWinScoreFun(const WinColorScore& c1, const WinColorScore& c2)
+static bool sortWinScoreFun(const WinColorScore &c1, const WinColorScore &c2)
 {
     return (c1.wins > c2.wins);
 }
 
-void sortWinColorScore(vector<WinColorScore>& scores)
+void sortWinColorScore(vector<WinColorScore> &scores)
 {
     if (scores.size() > 0)
         sort(scores.begin(), scores.end(), sortWinScoreFun);
 }
 
-int findMaxScore(Mat& image, vector<Vec3f>& ColorCircles, vector<Vec3f>& HchoCircles,
-                 vector<WinColorScore>& winScores)
+int findMaxScore(Mat &image, vector<Vec3f> &ColorCircles, vector<Vec3f> &HchoCircles, vector<WinColorScore> &winScores)
 {
     winScores.clear();
 
     for (size_t i = 0; i < 26; i++) {
         WinColorScore wScores;
         wScores.index = i;
-        wScores.wins  = 0;
+        wScores.wins = 0;
         winScores.push_back(wScores);
     }
 
@@ -313,8 +310,8 @@ int findMaxScore(Mat& image, vector<Vec3f>& ColorCircles, vector<Vec3f>& HchoCir
 
             // printf("HCHO point index = %lu, winGroup = %d\n", i, deltaScores.at(0).index);
 
-            int            winIndex = deltaScores.at(0).index;
-            WinColorScore& wScore   = winScores.at(winIndex);
+            int winIndex = deltaScores.at(0).index;
+            WinColorScore &wScore = winScores.at(winIndex);
             wScore.wins++;
         }
     }
@@ -323,9 +320,9 @@ int findMaxScore(Mat& image, vector<Vec3f>& ColorCircles, vector<Vec3f>& HchoCir
     return 0;
 }
 
-static int doWhiteBalance(const Mat& src, Mat& dst)
+static int doWhiteBalance(const Mat &src, Mat &dst)
 {
-    Mat                        wbImg;
+    Mat wbImg;
     Ptr<xphoto::WhiteBalancer> wb;
     wb = xphoto::createSimpleWB(); //createGrayworldWB()/createLearningBasedWB(modelFilename);
 
@@ -335,8 +332,7 @@ static int doWhiteBalance(const Mat& src, Mat& dst)
     return 1;
 }
 
-
-static int checkAllCircles(const Mat& src, Mat& dst, vector<Vec3f>& bCircles, vector<Vec3f>& lCircles)
+static int checkAllCircles(const Mat &src, Mat &dst, vector<Vec3f> &bCircles, vector<Vec3f> &lCircles)
 {
     int ret;
     struct EggsDetectorAlgorithmSettings mBigSettings(2, 103, 40, 20, 40, 98, 10, 148, 240);
@@ -348,8 +344,6 @@ static int checkAllCircles(const Mat& src, Mat& dst, vector<Vec3f>& bCircles, ve
     ret = findCircles(src, lCircles, mLitSettings);
     printf("lit = %d\n", ret);
 #endif
-
-
 
 #ifdef USE_FCGI
     dst = src.clone();
@@ -367,7 +361,7 @@ static int checkAllCircles(const Mat& src, Mat& dst, vector<Vec3f>& bCircles, ve
     return ret;
 }
 
-static int findValidRectCenter(Mat& src, vector<rectPointType>& vecRect, vector<Point>& CPoints)
+static int findValidRectCenter(Mat &src, vector<rectPointType> &vecRect, vector<Point> &CPoints)
 {
     vector<Point> vecHPoints; //所有色块中心点
     int num = findAllRectCenter(src, vecRect, vecHPoints);
@@ -382,22 +376,21 @@ static int findValidRectCenter(Mat& src, vector<rectPointType>& vecRect, vector<
     return 1;
 }
 
-
-static float calcHchoPPM(Mat& src, vector<rectPointType>& vecRect, vector<Point>& CPoints,
-                          vector<Vec3f>& bCircles, vector<Vec3f>& lCircles)
+static float calcHchoPPM(Mat &src, vector<rectPointType> &vecRect, vector<Point> &CPoints, vector<Vec3f> &bCircles,
+                         vector<Vec3f> &lCircles)
 {
     int ret;
 
     vector<int> ColorPPM;
 
-    vector<Vec3f>         colorPoints;
-    vector<Vec3f>         hcoPoints;
+    vector<Vec3f> colorPoints;
+    vector<Vec3f> hcoPoints;
     vector<WinColorScore> winScores;
 
     for (int i = 0; i < MAX_CHECK_COUNTS; i++) {
         //色卡取点
         ret = calcColorPoints(src, vecRect, CPoints, colorPoints);
-        if (ret != 0 ) {
+        if (ret != 0) {
             printf("errorrrrrrrrrr...\n");
         }
         //甲醛取点
@@ -409,9 +402,9 @@ static float calcHchoPPM(Mat& src, vector<rectPointType>& vecRect, vector<Point>
         //记录结果
         ColorPPM.push_back(winScores.at(0).index);
 
-        printf("===== ColorIndex = %d, ppm = %.2f, wins = %d\n", winScores.at(0).index, ColorHcho[winScores.at(0).index], winScores.at(0).wins);
+        printf("===== ColorIndex = %d, ppm = %.2f, wins = %d\n", winScores.at(0).index,
+               ColorHcho[winScores.at(0).index], winScores.at(0).wins);
     }
-
 
 #ifndef USE_FCGI
     vector<Point> vecHPoints; //所有色块中心点
@@ -434,7 +427,7 @@ static float calcHchoPPM(Mat& src, vector<rectPointType>& vecRect, vector<Point>
     return (ppm / MAX_CHECK_COUNTS);
 }
 
-static float hcho_main(string inFilename, Mat& out, int imgType)
+static float hcho_main(string inFilename, Mat &out, int imgType)
 {
     int ret;
 
@@ -458,8 +451,8 @@ static float hcho_main(string inFilename, Mat& out, int imgType)
 
     //识别圆形
     Mat outImg;
-    vector<Vec3f>                        bCircles;
-    vector<Vec3f>                        lCircles;
+    vector<Vec3f> bCircles;
+    vector<Vec3f> lCircles;
     ret = checkAllCircles(wbImg, outImg, bCircles, lCircles);
     printf("circles ret = %d\n", ret);
     if (ret <= 0) {
@@ -480,14 +473,14 @@ static float hcho_main(string inFilename, Mat& out, int imgType)
 #endif
 
     //色卡定位：定位每个有效色块中心点
-    vector<Point> CPoints;    //有效色块中心点（26个）
+    vector<Point> CPoints; //有效色块中心点（26个）
     ret = findValidRectCenter(outImg, vecRect, CPoints);
     printf("vaild rect center ret = %d\n", ret);
     if (ret <= 0) {
         return -4;
     }
 
-    float ppm =  calcHchoPPM(outImg, vecRect, CPoints, bCircles, lCircles);
+    float ppm = calcHchoPPM(outImg, vecRect, CPoints, bCircles, lCircles);
 
     out = outImg.clone();
     return ppm;
@@ -500,17 +493,17 @@ static const unsigned long STDIN_MAX = 1000000;
 
 static unsigned char hexchars[] = "0123456789ABCDEF";
 
-static int php_htoi(char* s)
+static int php_htoi(char *s)
 {
     int value;
     int c;
 
-    c = ((unsigned char*)s)[0];
+    c = ((unsigned char *)s)[0];
     if (isupper(c))
         c = tolower(c);
     value = (c >= '0' && c <= '9' ? c - '0' : c - 'a' + 10) * 16;
 
-    c = ((unsigned char*)s)[1];
+    c = ((unsigned char *)s)[1];
     if (isupper(c))
         c = tolower(c);
     value += c >= '0' && c <= '9' ? c - '0' : c - 'a' + 10;
@@ -518,22 +511,23 @@ static int php_htoi(char* s)
     return (value);
 }
 
-char* php_url_encode(char const* s, int len, int* new_length)
+char *php_url_encode(char const *s, int len, int *new_length)
 {
     register unsigned char c;
-    unsigned char *        to, *start;
-    unsigned char const *  from, *end;
+    unsigned char *to, *start;
+    unsigned char const *from, *end;
 
-    from  = (unsigned char*)s;
-    end   = (unsigned char*)s + len;
-    start = to = (unsigned char*)calloc(1, 3 * len + 1);
+    from = (unsigned char *)s;
+    end = (unsigned char *)s + len;
+    start = to = (unsigned char *)calloc(1, 3 * len + 1);
 
     while (from < end) {
         c = *from++;
 
         if (c == ' ') {
             *to++ = '+';
-        } else if ((c < '0' && c != '-' && c != '.') || (c < 'A' && c > '9') || (c > 'Z' && c < 'a' && c != '_') || (c > 'z')) {
+        } else if ((c < '0' && c != '-' && c != '.') || (c < 'A' && c > '9') || (c > 'Z' && c < 'a' && c != '_') ||
+                   (c > 'z')) {
             to[0] = '%';
             to[1] = hexchars[c >> 4];
             to[2] = hexchars[c & 15];
@@ -546,13 +540,13 @@ char* php_url_encode(char const* s, int len, int* new_length)
     if (new_length) {
         *new_length = to - start;
     }
-    return (char*)start;
+    return (char *)start;
 }
 
-int php_url_decode(char* str, int len)
+int php_url_decode(char *str, int len)
 {
-    char* dest = str;
-    char* data = str;
+    char *dest = str;
+    char *data = str;
 
     while (len--) {
         if (*data == '+') {
@@ -571,13 +565,13 @@ int php_url_decode(char* str, int len)
     return dest - str;
 }
 
-static long parseFileProp(char* request, char** content, const char *start, const char *end)
+static long parseFileProp(char *request, char **content, const char *start, const char *end)
 {
     unsigned long clen = STDIN_MAX;
 
     if (request) {
-        char* mstart = strstr(request, start);
-        char* mend = strstr(mstart, end);
+        char *mstart = strstr(request, start);
+        char *mend = strstr(mstart, end);
 
         if (!mstart) {
             return -1;
@@ -592,26 +586,25 @@ static long parseFileProp(char* request, char** content, const char *start, cons
         *content = new char[clen + 1];
         memset(*content, 0, clen + 1);
         memcpy(*content, mstart + strlen(start), clen);
-
     } else {
         // *never* read stdin when CONTENT_LENGTH is missing or unparsable
         *content = 0;
-        clen     = 0;
+        clen = 0;
     }
 
     return clen;
 }
 
 #ifdef USE_FCGI
-int fastcgi_main(int argc, const char** argv)
+int fastcgi_main(int argc, const char **argv)
 {
 
-    int  count = 0;
-    long pid   = getpid();
+    int count = 0;
+    long pid = getpid();
 
-    streambuf* cin_streambuf  = cin.rdbuf();
-    streambuf* cout_streambuf = cout.rdbuf();
-    streambuf* cerr_streambuf = cerr.rdbuf();
+    streambuf *cin_streambuf = cin.rdbuf();
+    streambuf *cout_streambuf = cout.rdbuf();
+    streambuf *cerr_streambuf = cerr.rdbuf();
 
     FCGX_Request request;
 
@@ -633,10 +626,10 @@ int fastcgi_main(int argc, const char** argv)
         cerr.rdbuf(&cerr_fcgi_streambuf);
 
         //获取图片路径
-        char* request_uri = FCGX_GetParam("REQUEST_URI", request.envp);
+        char *request_uri = FCGX_GetParam("REQUEST_URI", request.envp);
 
-        char*         path;
-        char*         type;
+        char *path;
+        char *type;
         unsigned long plen = parseFileProp(request_uri, &path, "path=", "&");
 
         unsigned long tlen = parseFileProp(request_uri, &type, "type=", "&");
@@ -648,8 +641,9 @@ int fastcgi_main(int argc, const char** argv)
                 "<TITLE>echo-cpp</TITLE>\n"
                 "<H1>echo-cpp</H1>\n"
                 "<H4>PID: "
-             << pid << "</H4>\n"
-                       "<H4>Request Number: "
+             << pid
+             << "</H4>\n"
+                "<H4>Request Number: "
              << ++count << "</H4>\n";
 
         if (plen > 0 && tlen > 0) {
@@ -687,13 +681,13 @@ int fastcgi_main(int argc, const char** argv)
 }
 #endif
 
-int main(int argc, const char** argv)
+int main(int argc, const char **argv)
 {
 
     color_init();
 
 #ifdef USE_FCGI
-    return fastcgi_main(argc,argv);
+    return fastcgi_main(argc, argv);
 #else
     CommandLineParser parser(argc, argv, keys);
 
@@ -714,8 +708,7 @@ int main(int argc, const char** argv)
     Mat out;
     printf("==================================\n");
     float ppm = hcho_main(inFilename, out, 0);
-    printf("xxx ppm: %f\n",ppm);
-    
+    printf("xxx ppm: %f\n", ppm);
 
     if (ppm > 0) {
         namedWindow(hcoName, 1);

@@ -45,49 +45,47 @@ float abs_float(float a);
 
 double mix_double(double a, double b, double mix);
 
+typedef struct matrix3x3 {
+    double m[3][3];
+} matrix3x3;
 
-typedef struct matrix3x3{
-	double m[3][3];
-}matrix3x3;
+void matrix3x3_identity(matrix3x3 *matrix);
+void matrix3x3_multiply(const matrix3x3 *matrix1, const matrix3x3 *matrix2, matrix3x3 *result);
+double matrix3x3_determinant(const matrix3x3 *matrix);
+int matrix3x3_inverse(const matrix3x3 *matrix, matrix3x3 *result);
+void matrix3x3_transpose(const matrix3x3 *matrix, matrix3x3 *result);
 
-void matrix3x3_identity(matrix3x3* matrix);
-void matrix3x3_multiply(const matrix3x3* matrix1, const matrix3x3* matrix2, matrix3x3* result);
-double matrix3x3_determinant(const matrix3x3* matrix);
-int matrix3x3_inverse(const matrix3x3* matrix, matrix3x3* result);
-void matrix3x3_transpose(const matrix3x3* matrix, matrix3x3* result);
+typedef struct vector2 {
+    float x;
+    float y;
+} vector2;
 
-typedef struct vector2{
-	float x;
-	float y;
-}vector2;
+void vector2_set(vector2 *v1, float x, float y);
 
-void vector2_set(vector2* v1, float x, float y);
+float vector2_length(const vector2 *v1);
 
-float vector2_length(const vector2* v1);
+void vector2_normalize(const vector2 *v1, vector2 *r);
 
-void vector2_normalize(const vector2* v1, vector2* r);
+float vector2_dot(const vector2 *v1, const vector2 *v2);
 
-float vector2_dot(const vector2* v1, const vector2* v2);
+typedef struct vector3 {
+    union {
+        struct {
+            float x;
+            float y;
+            float z;
+        };
+        float m[3];
+    };
+} vector3;
 
+void vector3_set(vector3 *vector, float x, float y, float z);
+void vector3_copy(const vector3 *vector, vector3 *result);
 
-typedef struct vector3{
-	union{
-		struct{
-			float x;
-			float y;
-			float z;
-		};
-		float m[3];
-	};
-}vector3;
+float vector3_length(const vector3 *vector);
 
-void vector3_set(vector3* vector, float x, float y, float z);
-void vector3_copy(const vector3* vector, vector3* result);
+void vector3_multiply_matrix3x3(const vector3 *vector, const matrix3x3 *matrix, vector3 *result);
 
-float vector3_length(const vector3* vector);
-
-void vector3_multiply_matrix3x3(const vector3* vector, const matrix3x3* matrix, vector3* result );
-
-void vector3_clamp(vector3* vector, float a, float b);
+void vector3_clamp(vector3 *vector, float a, float b);
 
 #endif /* GPICK_MATH_UTIL_H_ */

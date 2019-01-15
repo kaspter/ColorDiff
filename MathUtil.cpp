@@ -20,253 +20,277 @@
 #include <math.h>
 #include <string.h>
 
-float max_float_3(float a, float b, float c) {
-	if (a > b){
-		if (a > c){
-			return a;
-		}else{
-			return c;
-		}
-	}else{
-		if (b > c){
-			return b;
-		}else{
-			return c;
-		}
-	}
+float max_float_3(float a, float b, float c)
+{
+    if (a > b) {
+        if (a > c) {
+            return a;
+        } else {
+            return c;
+        }
+    } else {
+        if (b > c) {
+            return b;
+        } else {
+            return c;
+        }
+    }
 }
 
-float min_float_3(float a, float b, float c) {
-	if (a < b){
-		if (a < c){
-			return a;
-		}else{
-			return c;
-		}
-	}else{
-		if (b < c){
-			return b;
-		}else{
-			return c;
-		}
-	}
+float min_float_3(float a, float b, float c)
+{
+    if (a < b) {
+        if (a < c) {
+            return a;
+        } else {
+            return c;
+        }
+    } else {
+        if (b < c) {
+            return b;
+        } else {
+            return c;
+        }
+    }
 }
 
-float clamp_float(float x, float a, float b) {
-	if (x < a)
-		return a;
-	if (x > b)
-		return b;
-	return x;
+float clamp_float(float x, float a, float b)
+{
+    if (x < a)
+        return a;
+    if (x > b)
+        return b;
+    return x;
 }
 
-
-int clamp_int(int x, int a, int b) {
-	if (x < a)
-		return a;
-	if (x > b)
-		return b;
-	return x;
+int clamp_int(int x, int a, int b)
+{
+    if (x < a)
+        return a;
+    if (x > b)
+        return b;
+    return x;
 }
 
-int min_int(int a, int b) {
-	if (a > b)
-		return b;
-	return a;
+int min_int(int a, int b)
+{
+    if (a > b)
+        return b;
+    return a;
 }
 
-int max_int(int a, int b) {
-	if (a < b)
-		return b;
-	return a;
+int max_int(int a, int b)
+{
+    if (a < b)
+        return b;
+    return a;
 }
 
-int abs_int(int a) {
-	if (a < 0)
-		return -a;
-	return a;
+int abs_int(int a)
+{
+    if (a < 0)
+        return -a;
+    return a;
 }
 
-float abs_float(float a) {
-	if (a < 0)
-		return -a;
-	return a;
+float abs_float(float a)
+{
+    if (a < 0)
+        return -a;
+    return a;
 }
 
-void matrix3x3_identity(matrix3x3* matrix) {
-	int i,j;
-	for (i=0;i<3;++i){
-		for (j=0;j<3;++j){
-			matrix->m[i][j]=((i == j)?1:0);
-		}
-	}
+void matrix3x3_identity(matrix3x3 *matrix)
+{
+    int i, j;
+    for (i = 0; i < 3; ++i) {
+        for (j = 0; j < 3; ++j) {
+            matrix->m[i][j] = ((i == j) ? 1 : 0);
+        }
+    }
 }
 
-void matrix3x3_copy(const matrix3x3* matrix, matrix3x3* result) {
-	memcpy(result, matrix, sizeof(matrix3x3));
+void matrix3x3_copy(const matrix3x3 *matrix, matrix3x3 *result)
+{
+    memcpy(result, matrix, sizeof(matrix3x3));
 }
 
-void matrix3x3_multiply(const matrix3x3* matrix1, const matrix3x3* matrix2, matrix3x3* result){
-	int i,j,k;
+void matrix3x3_multiply(const matrix3x3 *matrix1, const matrix3x3 *matrix2, matrix3x3 *result)
+{
+    int i, j, k;
 
-	matrix3x3 matrix_t;
+    matrix3x3 matrix_t;
 
-	if (matrix1 == result){
-		matrix3x3_copy(matrix1, &matrix_t);
-		matrix1=&matrix_t;
-	}else if (matrix2 == result){
-		matrix3x3_copy(matrix2, &matrix_t);
-		matrix2=&matrix_t;
-	}
+    if (matrix1 == result) {
+        matrix3x3_copy(matrix1, &matrix_t);
+        matrix1 = &matrix_t;
+    } else if (matrix2 == result) {
+        matrix3x3_copy(matrix2, &matrix_t);
+        matrix2 = &matrix_t;
+    }
 
-	for (i=0;i<3;++i){
-		for (j=0;j<3;++j){
-			result->m[i][j]=0;
-			for (k=0;k<3;++k){
-				result->m[i][j] += matrix1->m[k][j]*matrix2->m[i][k];
-			}
-		}
-	}
+    for (i = 0; i < 3; ++i) {
+        for (j = 0; j < 3; ++j) {
+            result->m[i][j] = 0;
+            for (k = 0; k < 3; ++k) {
+                result->m[i][j] += matrix1->m[k][j] * matrix2->m[i][k];
+            }
+        }
+    }
 }
 
-double matrix3x3_determinant(const matrix3x3* matrix) {
-	double det=0;
-	double t;
-	int i,j;
-	for (i=0;i<3;++i){
-		t=1;
-		for (j=0;j<3;++j){
-			t*=matrix->m[(i+j)%3][j];
-		}
-		det+=t;
-	}
-	for (i=0;i<3;++i){
-		t=1;
-		for (j=0;j<3;++j){
-			t*=matrix->m[(i+2-j)%3][j];
-		}
-		det-=t;
-	}
-	return det;
+double matrix3x3_determinant(const matrix3x3 *matrix)
+{
+    double det = 0;
+    double t;
+    int i, j;
+    for (i = 0; i < 3; ++i) {
+        t = 1;
+        for (j = 0; j < 3; ++j) {
+            t *= matrix->m[(i + j) % 3][j];
+        }
+        det += t;
+    }
+    for (i = 0; i < 3; ++i) {
+        t = 1;
+        for (j = 0; j < 3; ++j) {
+            t *= matrix->m[(i + 2 - j) % 3][j];
+        }
+        det -= t;
+    }
+    return det;
 }
 
-void matrix3x3_transpose(const matrix3x3* matrix, matrix3x3* result) {
-	int i,j;
-	matrix3x3 matrix_t;
+void matrix3x3_transpose(const matrix3x3 *matrix, matrix3x3 *result)
+{
+    int i, j;
+    matrix3x3 matrix_t;
 
-	if (matrix == result){
-		matrix3x3_copy(matrix, &matrix_t);
-		matrix=&matrix_t;
-	}
+    if (matrix == result) {
+        matrix3x3_copy(matrix, &matrix_t);
+        matrix = &matrix_t;
+    }
 
-	for (i=0;i<3;++i){
-		for (j=0;j<3;++j){
-			result->m[j][i]=matrix->m[i][j];
-		}
-	}
-
+    for (i = 0; i < 3; ++i) {
+        for (j = 0; j < 3; ++j) {
+            result->m[j][i] = matrix->m[i][j];
+        }
+    }
 }
 
-int matrix3x3_inverse(const matrix3x3* matrix, matrix3x3* result){
-	double det = matrix3x3_determinant(matrix);
-	if (det == 0) return -1;
+int matrix3x3_inverse(const matrix3x3 *matrix, matrix3x3 *result)
+{
+    double det = matrix3x3_determinant(matrix);
+    if (det == 0)
+        return -1;
 
-	double invdet=1/det;
+    double invdet = 1 / det;
 
-	matrix3x3 matrix_t;
+    matrix3x3 matrix_t;
 
-	if (matrix == result){
-		matrix3x3_copy(matrix, &matrix_t);
-		matrix=&matrix_t;
-	}
+    if (matrix == result) {
+        matrix3x3_copy(matrix, &matrix_t);
+        matrix = &matrix_t;
+    }
 
-	result->m[0][0] = (matrix->m[1][1] * matrix->m[2][2] - matrix->m[2][1] * matrix->m[1][2]) * invdet;
-	result->m[0][1] = -(matrix->m[0][1] * matrix->m[2][2] - matrix->m[2][1] * matrix->m[0][2]) * invdet;
-	result->m[0][2] = (matrix->m[0][1] * matrix->m[1][2] - matrix->m[1][1] * matrix->m[0][2]) * invdet;
+    result->m[0][0] = (matrix->m[1][1] * matrix->m[2][2] - matrix->m[2][1] * matrix->m[1][2]) * invdet;
+    result->m[0][1] = -(matrix->m[0][1] * matrix->m[2][2] - matrix->m[2][1] * matrix->m[0][2]) * invdet;
+    result->m[0][2] = (matrix->m[0][1] * matrix->m[1][2] - matrix->m[1][1] * matrix->m[0][2]) * invdet;
 
-	result->m[1][0] = -(matrix->m[1][0] * matrix->m[2][2] - matrix->m[2][0] * matrix->m[1][2]) * invdet;
-	result->m[1][1] = (matrix->m[0][0] * matrix->m[2][2] - matrix->m[2][0] * matrix->m[0][2]) * invdet;
-	result->m[1][2] = -(matrix->m[0][0] * matrix->m[1][2] - matrix->m[1][0] * matrix->m[0][2]) * invdet;
+    result->m[1][0] = -(matrix->m[1][0] * matrix->m[2][2] - matrix->m[2][0] * matrix->m[1][2]) * invdet;
+    result->m[1][1] = (matrix->m[0][0] * matrix->m[2][2] - matrix->m[2][0] * matrix->m[0][2]) * invdet;
+    result->m[1][2] = -(matrix->m[0][0] * matrix->m[1][2] - matrix->m[1][0] * matrix->m[0][2]) * invdet;
 
-	result->m[2][0] = (matrix->m[1][0] * matrix->m[2][1] - matrix->m[2][0] * matrix->m[1][1]) * invdet;
-	result->m[2][1] = -(matrix->m[0][0] * matrix->m[2][1] - matrix->m[2][0] * matrix->m[0][1]) * invdet;
-	result->m[2][2] = (matrix->m[0][0] * matrix->m[1][1] - matrix->m[1][0] * matrix->m[0][1]) * invdet;
+    result->m[2][0] = (matrix->m[1][0] * matrix->m[2][1] - matrix->m[2][0] * matrix->m[1][1]) * invdet;
+    result->m[2][1] = -(matrix->m[0][0] * matrix->m[2][1] - matrix->m[2][0] * matrix->m[0][1]) * invdet;
+    result->m[2][2] = (matrix->m[0][0] * matrix->m[1][1] - matrix->m[1][0] * matrix->m[0][1]) * invdet;
 
-	return 0;
+    return 0;
 }
 
-void vector2_set(vector2* v1, float x, float y) {
-	v1->x = x;
-	v1->y = y;
+void vector2_set(vector2 *v1, float x, float y)
+{
+    v1->x = x;
+    v1->y = y;
 }
 
-
-float vector2_length(const vector2* v1) {
-	return sqrt(v1->x * v1->x + v1->y * v1->y);
+float vector2_length(const vector2 *v1)
+{
+    return sqrt(v1->x * v1->x + v1->y * v1->y);
 }
 
-void vector2_normalize(const vector2* v1, vector2* r) {
-	float l = vector2_length(v1);
-	r->x = v1->x / l;
-	r->y = v1->y / l;
+void vector2_normalize(const vector2 *v1, vector2 *r)
+{
+    float l = vector2_length(v1);
+    r->x = v1->x / l;
+    r->y = v1->y / l;
 }
 
-float vector2_dot(const vector2* v1, const vector2* v2) {
-	return v1->x * v2->x + v1->y * v2->y;
+float vector2_dot(const vector2 *v1, const vector2 *v2)
+{
+    return v1->x * v2->x + v1->y * v2->y;
 }
 
-float mix_float(float a, float b, float mix) {
-	return a * (1 - mix) + b * mix;
+float mix_float(float a, float b, float mix)
+{
+    return a * (1 - mix) + b * mix;
 }
 
-double mix_double(double a, double b, double mix){
-	return a * (1 - mix) + b * mix;
+double mix_double(double a, double b, double mix)
+{
+    return a * (1 - mix) + b * mix;
 }
 
-float wrap_float(float x) {
-	return x - floor(x);
+float wrap_float(float x)
+{
+    return x - floor(x);
 }
 
-int wrap_int(int x, int a, int b) {
-	if (x < a){
-		return b - (a - x) % (b - a);
-	}else if (x >= b){
-		return a + (x - b) % (b - a);
-	}
-	return x;
+int wrap_int(int x, int a, int b)
+{
+    if (x < a) {
+        return b - (a - x) % (b - a);
+    } else if (x >= b) {
+        return a + (x - b) % (b - a);
+    }
+    return x;
 }
 
+void vector3_multiply_matrix3x3(const vector3 *vector, const matrix3x3 *matrix, vector3 *result)
+{
 
-void vector3_multiply_matrix3x3(const vector3* vector, const matrix3x3* matrix, vector3* result) {
+    vector3 vector_t;
 
-	vector3 vector_t;
+    if (vector == result) {
+        vector3_copy(vector, &vector_t);
+        vector = &vector_t;
+    }
 
-	if (vector == result){
-		vector3_copy(vector, &vector_t);
-		vector=&vector_t;
-	}
-
-	result->x = vector->x * matrix->m[0][0] + vector->y * matrix->m[0][1] + vector->z * matrix->m[0][2];
-	result->y = vector->x * matrix->m[1][0] + vector->y * matrix->m[1][1] + vector->z * matrix->m[1][2];
-	result->z = vector->x * matrix->m[2][0] + vector->y * matrix->m[2][1] + vector->z * matrix->m[2][2];
+    result->x = vector->x * matrix->m[0][0] + vector->y * matrix->m[0][1] + vector->z * matrix->m[0][2];
+    result->y = vector->x * matrix->m[1][0] + vector->y * matrix->m[1][1] + vector->z * matrix->m[1][2];
+    result->z = vector->x * matrix->m[2][0] + vector->y * matrix->m[2][1] + vector->z * matrix->m[2][2];
 }
 
-void vector3_set(vector3* vector, float x, float y, float z) {
-	vector->x = x;
-	vector->y = y;
-	vector->z = z;
+void vector3_set(vector3 *vector, float x, float y, float z)
+{
+    vector->x = x;
+    vector->y = y;
+    vector->z = z;
 }
 
-void vector3_copy(const vector3* vector, vector3* result){
-	memcpy(result, vector, sizeof(vector3));
+void vector3_copy(const vector3 *vector, vector3 *result)
+{
+    memcpy(result, vector, sizeof(vector3));
 }
 
-float vector3_length(const vector3* vector) {
-	return sqrt(vector->x * vector->x + vector->y * vector->y + vector->z * vector->z);
+float vector3_length(const vector3 *vector)
+{
+    return sqrt(vector->x * vector->x + vector->y * vector->y + vector->z * vector->z);
 }
 
-void vector3_clamp(vector3* vector, float a, float b){
-	vector->x = clamp_float(vector->x, a, b);
-	vector->y = clamp_float(vector->y, a, b);
-	vector->z = clamp_float(vector->z, a, b);
+void vector3_clamp(vector3 *vector, float a, float b)
+{
+    vector->x = clamp_float(vector->x, a, b);
+    vector->y = clamp_float(vector->y, a, b);
+    vector->z = clamp_float(vector->z, a, b);
 }
